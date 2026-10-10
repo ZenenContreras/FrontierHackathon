@@ -206,6 +206,23 @@ test("simulado: una respuesta que contiene el token no se imprime ni se registra
   assert.equal(text.includes(TOKEN), false);
 });
 
+test("simulado: omit e invalid no envían el token real", async () => {
+  const seen: string[] = [];
+  const transport: Transport = async (request) => {
+    seen.push(request.headers.Authorization ?? "");
+    return { status: 401, body: "", headers: {} };
+  };
+  const omitted = context(transport);
+  omitted.authMode = "omit";
+  await executeProbe(probe({ attemptKey: "omit-1", path: "/health", method: "GET", body: undefined }), omitted);
+  const invalid = context(transport);
+  invalid.authMode = "invalid";
+  await executeProbe(probe({ attemptKey: "invalid-1", path: "/health", method: "GET", body: undefined }), invalid);
+
+  assert.deepEqual(seen, ["", "Bearer invalid-token"]);
+  assert.equal(seen.some((value) => value.includes(TOKEN)), false);
+});
+
 test("simulado: no envía sin hipótesis", async () => {
   let calls = 0;
   const lab = context(async () => {

@@ -1,12 +1,12 @@
 // SIMULADO. Comprueba el aislamiento del laboratorio sin contactar el original.
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { runCli } from "../tools/cli.js";
 import { applyEnvFile } from "../tools/env.js";
-import { readdirSync, statSync } from "node:fs";
+import { appendRecord } from "../tools/record.js";
 
 const TOKEN = "super-secret-token";
 
@@ -123,6 +123,17 @@ test("simulado: el cargador de .env no devuelve el valor en el diagnóstico", ()
   assert.equal(loaded.env.PARTICIPANT_TOKEN, TOKEN);
 });
 
-test("simulado: las pruebas no escriben el experimentos.jsonl del repositorio", () => {
-  assert.equal(readFileSync("experimentos.jsonl", "utf8"), "");
+test("simulado: una escritura temporal no altera el log real", () => {
+  const before = readFileSync("experimentos.jsonl", "utf8");
+  const dir = mkdtempSync(path.join(tmpdir(), "lab-log-"));
+  appendRecord(path.join(dir, "experimentos.jsonl"), {
+    id: 1,
+    seq: "simulado",
+    x_req: 1,
+    hipotesis: "no es un experimento real",
+    request: { m: "PING;64" },
+    status: 200,
+    response: { simulado: true },
+  }, "test-token-xx");
+  assert.equal(readFileSync("experimentos.jsonl", "utf8"), before);
 });

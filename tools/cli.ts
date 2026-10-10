@@ -122,6 +122,7 @@ export async function runCli(argv: string[], options: CliOptions = {}): Promise<
     dailyLimit: readDailyLimit(env),
     timeoutMs: readTimeout(env),
     maxBodyBytes: 1_000_000,
+    authMode: readAuthMode(env),
   };
 
   out.stdout(`attempt-prefix: ${parsed.attemptPrefix}`);
@@ -341,6 +342,17 @@ function readFlags(argv: string[]): { values: Map<string, string>; headers: stri
 const deniedTransport: Transport = async () => {
   throw new Error("red de laboratorio no habilitada");
 };
+
+function readAuthMode(env: NodeJS.ProcessEnv): "bearer" | "omit" | "invalid" {
+  const raw = env.LAB_AUTH_MODE;
+  if (raw === undefined || raw.length === 0 || raw === "bearer") {
+    return "bearer";
+  }
+  if (raw === "omit" || raw === "invalid") {
+    return raw;
+  }
+  throw new Error("LAB_AUTH_MODE debe ser bearer, omit o invalid");
+}
 
 function readInterval(env: NodeJS.ProcessEnv): number {
   return readBounded(env.LAB_MIN_INTERVAL_MS, DEFAULT_INTERVAL_MS, MIN_INTERVAL_MS, 60_000);

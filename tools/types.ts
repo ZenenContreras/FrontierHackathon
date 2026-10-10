@@ -92,4 +92,5 @@ export interface LabContext {
   dailyLimit: number;
   timeoutMs: number;
   maxBodyBytes: number;
+  authMode?: "bearer" | "omit" | "invalid";
 }

@@ -1,0 +1,45 @@
+{
+  "seq": "s13",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset limpia el token antes de ver si E507 modifica saldos"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Lucia;82 crea la cuenta origen del intento fallido",
+      "body": { "m": "ALTA;Lucia;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Mateo;3 crea la cuenta destino del intento fallido",
+      "body": { "m": "ALTA;Mateo;3" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg TRANSFER;AC-0002;AC-0001;50000;23 con saldo 0 responde E507",
+      "body": { "m": "TRANSFER;AC-0002;AC-0001;50000;23" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg CONSULTA;AC-0002;11 despues de E507 sigue en saldo 0 si el rechazo no debita",
+      "body": { "m": "CONSULTA;AC-0002;11" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg CONSULTA;AC-0001;14 despues de E507 sigue en saldo 0 si el rechazo no acredita",
+      "body": { "m": "CONSULTA;AC-0001;14" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset final borra las cuentas de s13"
+    }
+  ]
+}

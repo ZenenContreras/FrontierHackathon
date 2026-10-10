@@ -1,0 +1,22 @@
+{
+  "seq": "s2",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;64 repetido incrementa X-Req respecto de la respuesta anterior",
+      "body": { "m": "PING;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset no cambia el contrato de su propia respuesta y puede reiniciar o conservar X-Req"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;64 despues de reset muestra si X-Req vuelve a empezar o continua",
+      "body": { "m": "PING;64" }
+    }
+  ]
+}

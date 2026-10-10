@@ -1,0 +1,65 @@
+{
+  "seq": "s8",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;1: si PING ignora el control, responde pong; si lo valida, E202",
+      "body": { "m": "PING;1" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;5X: si PING ignora el control, responde pong; si lo valida, E201",
+      "body": { "m": "PING;5X" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;0: el control 0 es invalido o aceptado para PING",
+      "body": { "m": "PING;0" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;64;1 tiene un segmento de mas y no equivale a PING;64",
+      "body": { "m": "PING;64;1" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ping;64: el comando en minusculas no equivale a PING salvo que el servicio ignore mayusculas",
+      "body": { "m": "ping;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;;64 tiene un segmento vacio intermedio",
+      "body": { "m": "PING;;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg con m PING;64 y espacio final cambia el control o se acepta",
+      "body": { "m": "PING;64 " }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg SALDOS;AC-0001;38 sigue siendo comando desconocido como en el ejemplo de la manana, o el servicio cambio",
+      "body": { "m": "SALDOS;AC-0001;38" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Lucia;Gomez;5X: el control mal formado se evalua antes que la aridad",
+      "body": { "m": "ALTA;Lucia;Gomez;5X" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;5X: un solo segmento no numerico es control mal formado, aridad o segmento vacio",
+      "body": { "m": "ALTA;5X" }
+    }
+  ]
+}

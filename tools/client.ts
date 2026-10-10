@@ -80,7 +80,7 @@ export async function executeProbe(input: ProbeInput, ctx: LabContext): Promise<
       {
         method: input.method,
         url,
-        headers: requestHeaders(input, ctx.token, wire.contentType),
+        headers: requestHeaders(input, ctx, wire.contentType),
         ...(wire.body !== undefined ? { body: wire.body } : {}),
       },
       signal,
@@ -269,8 +269,18 @@ function wireBody(input: ProbeInput): { body?: string; contentType?: string } {
   };
 }
 
-function requestHeaders(input: ProbeInput, token: string, contentType: string | undefined): Record<string, string> {
-  const headers: Record<string, string> = { ...input.headers, Authorization: `Bearer ${token}` };
+function requestHeaders(
+  input: ProbeInput,
+  ctx: Pick<LabContext, "token" | "authMode">,
+  contentType: string | undefined,
+): Record<string, string> {
+  const headers: Record<string, string> = { ...input.headers };
+  const mode = ctx.authMode ?? "bearer";
+  if (mode === "bearer") {
+    headers.Authorization = `Bearer ${ctx.token}`;
+  } else if (mode === "invalid") {
+    headers.Authorization = "Bearer invalid-token";
+  }
   if (contentType !== undefined) {
     headers["Content-Type"] = contentType;
   }

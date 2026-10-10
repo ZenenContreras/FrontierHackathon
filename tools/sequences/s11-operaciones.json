@@ -1,0 +1,75 @@
+{
+  "seq": "s11",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset limpia el token antes de repetir operaciones del ejemplo"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Lucia;82 crea la primera cuenta",
+      "body": { "m": "ALTA;Lucia;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Mateo;3 crea la segunda cuenta",
+      "body": { "m": "ALTA;Mateo;3" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg DEPOSITO;AC-0001;250000;86 acredita y conserva el texto recieved si el ejemplo sigue vigente",
+      "body": { "m": "DEPOSITO;AC-0001;250000;86" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg TRANSFER;AC-0001;AC-0002;40000;86 mueve 40000 si el control y el limite de la manana siguen vigentes",
+      "body": { "m": "TRANSFER;AC-0001;AC-0002;40000;86" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg CONSULTA;AC-0002;11 despues de esa transferencia muestra el saldo abonado",
+      "body": { "m": "CONSULTA;AC-0002;11" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg TRANSFER de 120000 con control 55 sigue rechazandose por limite o el limite cambio",
+      "body": { "m": "TRANSFER;AC-0001;AC-0002;120000;55" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg TRANSFER de 100000 con control 12 sigue aceptandose si 100000 no supera el limite",
+      "body": { "m": "TRANSFER;AC-0001;AC-0002;100000;12" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ANULA;OP-0003;66 anula la tercera operacion si la numeracion y el control del ejemplo siguen vigentes",
+      "body": { "m": "ANULA;OP-0003;66" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ANULA;OP-0003;66 repetido no vuelve a aplicar la anulacion",
+      "body": { "m": "ANULA;OP-0003;66" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg CONSULTA;AC-0001;14 despues de anular muestra si la anulacion revierte el saldo",
+      "body": { "m": "CONSULTA;AC-0001;14" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset final borra las cuentas creadas en s11"
+    }
+  ]
+}

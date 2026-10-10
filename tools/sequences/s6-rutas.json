@@ -1,0 +1,69 @@
+{
+  "seq": "s6",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;64 fija el X-Req antes de una ruta desconocida",
+      "body": { "m": "PING;64" }
+    },
+    {
+      "method": "GET",
+      "path": "/no-existe",
+      "hipotesis": "GET /no-existe con Bearer valido responde igual que sin Authorization"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "GET /no-existe no incrementa X-Req del siguiente POST /msg",
+      "body": { "m": "PING;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/no-existe",
+      "hipotesis": "POST /no-existe con Bearer valido usa el mismo error que GET /no-existe"
+    },
+    {
+      "method": "GET",
+      "path": "/msg",
+      "hipotesis": "GET /msg no ejecuta el comando y no coincide con POST /msg"
+    },
+    {
+      "method": "PUT",
+      "path": "/health",
+      "hipotesis": "PUT /health no usa la respuesta de GET /health"
+    },
+    {
+      "method": "GET",
+      "path": "/__reset",
+      "hipotesis": "GET /__reset no reinicia ni responde como POST /__reset"
+    },
+    {
+      "method": "POST",
+      "path": "/health",
+      "hipotesis": "POST /health no responde como GET /health"
+    },
+    {
+      "method": "DELETE",
+      "path": "/msg",
+      "hipotesis": "DELETE /msg responde como ruta o metodo no admitido"
+    },
+    {
+      "method": "GET",
+      "path": "/Health",
+      "hipotesis": "GET /Health distingue mayusculas de GET /health"
+    },
+    {
+      "method": "POST",
+      "path": "/MSG",
+      "hipotesis": "POST /MSG distingue mayusculas de POST /msg",
+      "body": { "m": "PING;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg/",
+      "hipotesis": "POST /msg/ con barra final no equivale a POST /msg",
+      "body": { "m": "PING;64" }
+    }
+  ]
+}

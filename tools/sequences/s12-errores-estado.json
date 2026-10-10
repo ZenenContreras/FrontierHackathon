@@ -1,0 +1,57 @@
+{
+  "seq": "s12",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset deja el token sin operaciones antes de probar errores de estado"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ANULA;OP-0003;66 sin operaciones previas no anula nada o rechaza la operacion",
+      "body": { "m": "ANULA;OP-0003;66" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Lucia;83 sigue siendo control invalido y no crea cuenta",
+      "body": { "m": "ALTA;Lucia;83" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Lucia;Gomez;11 sigue siendo aridad invalida si el control 11 sigue vigente",
+      "body": { "m": "ALTA;Lucia;Gomez;11" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg DEPOSITO;AC-0001;250000;86 sin cuenta no crea la cuenta y responde cuenta inexistente o un error previo",
+      "body": { "m": "DEPOSITO;AC-0001;250000;86" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Lucia;82 crea AC-0001 para probar saldo insuficiente",
+      "body": { "m": "ALTA;Lucia;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg ALTA;Mateo;3 crea AC-0002 para probar saldo insuficiente",
+      "body": { "m": "ALTA;Mateo;3" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg TRANSFER;AC-0002;AC-0001;50000;23 con saldo 0 responde saldo insuficiente si el control de la manana sigue vigente",
+      "body": { "m": "TRANSFER;AC-0002;AC-0001;50000;23" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset final borra las cuentas de s12"
+    }
+  ]
+}

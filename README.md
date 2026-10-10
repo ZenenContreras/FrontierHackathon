@@ -202,3 +202,6 @@ en otro caso se conserva el texto. Un cuerpo no JSON se guarda como texto exacto
 
 Las pruebas de `tests/lab-*.test.ts` son simuladas. No escriben el `experimentos.jsonl` del
 repositorio ni contactan el original.
+
+La especificación inicial del original está en `docs/service-spec.md`. Cita los identificadores de
+`experimentos.jsonl`. El servidor de `src/` todavía no la implementa.

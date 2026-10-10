@@ -1,0 +1,28 @@
+{
+  "seq": "s9",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset con cuerpo JSON sigue respondiendo {\"ok\":true} o rechaza el cuerpo",
+      "body": { "extra": true }
+    },
+    {
+      "method": "GET",
+      "path": "/health?x=1",
+      "hipotesis": "GET /health?x=1 no equivale a GET /health si la query forma parte de la ruta"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg saldos;AC-0001;38 en minusculas sigue siendo comando desconocido si el nombre se normaliza",
+      "body": { "m": "saldos;AC-0001;38" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg SaldoS;AC-0001;38 mixto sigue siendo comando desconocido con el mismo mensaje",
+      "body": { "m": "SaldoS;AC-0001;38" }
+    }
+  ]
+}

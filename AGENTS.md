@@ -112,7 +112,8 @@ La estructura inicial del repositorio es:
 │   └── settings.json
 ├── docs/
 │   ├── design.md
-│   └── diagramadearquitectura.md
+│   ├── diagramadearquitectura.md
+│   └── service-spec.md
 ├── pruebas/
 │   └── ejemplos.jsonl
 ├── src/
@@ -140,13 +141,14 @@ Esta estructura es la del repositorio tras el laboratorio. Los agentes deben ins
 
 El diagrama de arquitectura está en `docs/diagramadearquitectura.md`. `docs/design.md` todavía enlaza `docs/architecture.md`, que no existe en disco. No se ha renombrado ese archivo.
 
-`src/` contiene solo la infraestructura HTTP, el almacén en memoria y un despacho provisional de `POST /msg`. No implementa comandos ni llama al original. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` sigue vacío: las pruebas del laboratorio son simuladas y escriben en archivos temporales.
+`src/` contiene solo la infraestructura HTTP, el almacén en memoria y un despacho provisional de `POST /msg`. No implementa comandos ni llama al original. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` contiene experimentos reales del 2026-10-10. `docs/service-spec.md` es la especificación inicial del original, no el diseño del reemplazo.
 
 ### Responsabilidades de los archivos existentes
 
 - `Agents.md`: contexto global, reglas y coordinación entre agentes.
 - `docs/design.md`: documento de diseño del sistema, sus decisiones, restricciones y estrategia de validación.
 - `docs/diagramadearquitectura.md`: diagramas de arquitectura y flujos de ejecución. El nombre previsto en estas reglas era `docs/architecture.md`; el archivo real tiene otro nombre.
+- `docs/service-spec.md`: especificación del comportamiento observado del original. No sustituye a `docs/design.md`.
 - `pruebas/ejemplos.jsonl`: ejemplos proporcionados por la organización.
 - `experimentos.jsonl`: registro de las peticiones realizadas al original y sus resultados. Sigue el esquema oficial y no debe recibir resultados simulados.
 - `tools/`: laboratorio de experimentación. Es el único lugar que puede llamar al original.

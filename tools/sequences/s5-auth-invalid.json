@@ -1,0 +1,21 @@
+{
+  "seq": "s5",
+  "steps": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "hipotesis": "GET /health con Bearer invalid-token difiere o coincide con la ausencia de Authorization"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"PING;64\"} con Bearer invalid-token no responde {\"pong\":true}",
+      "body": { "m": "PING;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset con Bearer invalid-token no responde {\"ok\":true} del token valido"
+    }
+  ]
+}

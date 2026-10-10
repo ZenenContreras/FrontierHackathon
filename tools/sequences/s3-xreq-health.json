@@ -1,0 +1,22 @@
+{
+  "seq": "s3",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;64 antes de GET /health deja un X-Req de referencia",
+      "body": { "m": "PING;64" }
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "hipotesis": "GET /health entre dos POST /msg no incrementa X-Req"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg PING;64 despues de GET /health incrementa X-Req en 1 si /health no cuenta",
+      "body": { "m": "PING;64" }
+    }
+  ]
+}

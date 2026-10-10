@@ -1,0 +1,26 @@
+{
+  "seq": "s1",
+  "steps": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "hipotesis": "GET /health con Bearer valido responde 200; el cuerpo aun no esta medido"
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset con Bearer valido restablece el estado de ese token; status y cuerpo no estan medidos"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "hipotesis": "GET /health despues de POST /__reset conserva el mismo status y cuerpo"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"PING;64\"} despues de reset sigue respondiendo 200 y {\"pong\":true} como el ejemplo de la manana",
+      "body": { "m": "PING;64" }
+    }
+  ]
+}

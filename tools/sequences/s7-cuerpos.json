@@ -1,0 +1,91 @@
+{
+  "seq": "s7",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg sin cuerpo y sin Content-Type no ejecuta PING"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {} exige el campo m",
+      "body": {}
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":null} no se acepta como mensaje string",
+      "body": { "m": null }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"\"} es un mensaje vacio, no un PING",
+      "body": { "m": "" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg sin m y con otra clave no lee el comando desde esa clave",
+      "body": { "x": "PING;64" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg con m valido y un campo extra sigue respondiendo pong o rechaza el campo",
+      "body": { "m": "PING;64", "extra": 1 }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg con cuerpo texto PING;64 y sin Content-Type JSON no se interpreta como {\"m\":\"PING;64\"}",
+      "rawBody": true,
+      "body": "PING;64"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg con JSON mal formado y Bearer valido no responde 401",
+      "rawBody": true,
+      "contentType": "application/json",
+      "body": "{"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg con cuerpo array JSON no se acepta como objeto",
+      "body": []
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"PING\"} sin control no equivale a PING;64",
+      "body": { "m": "PING" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"PING;\"} con control vacio produce error de control",
+      "body": { "m": "PING;" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"PING;XX\"} trata XX como control mal formado o lo acepta",
+      "body": { "m": "PING;XX" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"NOPE;1\"} con comando desconocido y control numerico produce E301 u otro error",
+      "body": { "m": "NOPE;1" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "POST /msg {\"m\":\"NOPE;5X\"} muestra si el control se valida antes que el comando",
+      "body": { "m": "NOPE;5X" }
+    }
+  ]
+}
