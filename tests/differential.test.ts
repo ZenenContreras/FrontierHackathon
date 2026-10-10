@@ -1,4 +1,7 @@
-// Comparación local contra registros ya guardados. No contacta el original.
+// Comparación local de status y cuerpo. No contacta el original.
+// El log no guarda método, ruta ni Authorization. Esos datos salen de tools/sequences
+// o, en s6b, de la hipótesis. El Bearer válido del test es un token ficticio de la lista
+// local, no el token del participante. Una coincidencia aquí no es una captura de la petición.
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import { readFileSync, readdirSync } from "node:fs";

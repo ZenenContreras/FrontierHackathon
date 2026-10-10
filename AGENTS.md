@@ -141,7 +141,7 @@ Esta estructura es la del repositorio tras el laboratorio. Los agentes deben ins
 
 El diagrama de arquitectura está en `docs/diagramadearquitectura.md`. `docs/design.md` todavía enlaza `docs/architecture.md`, que no existe en disco. No se ha renombrado ese archivo.
 
-`src/` implementa el transporte, la autenticación observada, el parser y los comandos con evidencia. No llama al original. La fórmula general del control de `ALTA`, `DEPOSITO` y `TRANSFER` sigue abierta. El paso 5 no gastó cuota: la memoria observada está en `docs/service-spec.md`, sección 8. El paso 6 compara en local status y cuerpo con los registros; la matriz está en `docs/cobertura.md`. No hay medición con dos tokens válidos ni con una transferencia igual al saldo. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` contiene experimentos reales. `docs/service-spec.md` describe el original, no el diseño del reemplazo.
+`src/` implementa el transporte, la autenticación observada, el parser y los comandos con evidencia. No llama al original. La fórmula general del control de `ALTA`, `DEPOSITO` y `TRANSFER` sigue abierta. El paso 5 no gastó cuota: la memoria observada está en `docs/service-spec.md`, sección 8. El paso 6 compara en local status y cuerpo; la petición completa no está en el log. La limitación está en `docs/cobertura.md`. No hay medición con dos tokens válidos ni con una transferencia igual al saldo. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` contiene experimentos reales. `docs/service-spec.md` describe el original, no el diseño del reemplazo.
 
 ### Responsabilidades de los archivos existentes
 

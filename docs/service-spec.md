@@ -230,7 +230,7 @@ El reemplazo guarda cuentas, operaciones y los dos contadores en memoria, separa
 
 Eso está cubierto por `tests/sequences.test.ts`, `tests/commands.test.ts`, `tests/store.test.ts` y la regresión de `tools/sequences`.
 
-El paso 6 no llamó al original. Reprodujo en local las 127 líneas de `experimentos.jsonl` y las 20 de `pruebas/ejemplos.jsonl`. Status y cuerpo coincidieron; no hubo líneas con `status` nulo ni `X-Frontier-Infra`. El método y la ruta no están en el log: salen de `tools/sequences`, salvo `s6b`, reconstruida desde su hipótesis. La matriz está en `docs/cobertura.md`. El reemplazo no emite `X-Req`. La evaluación no compara headers, y el valor absoluto de ese contador no se puede exigir en un proceso nuevo porque la primera observación ya era 2.
+El paso 6 no llamó al original. Al reenviar localmente las peticiones reconstruidas, status y cuerpo coincidieron con las 127 líneas de `experimentos.jsonl` y con las 20 de `pruebas/ejemplos.jsonl`. Eso no es una captura completa: el log no guarda método, ruta ni `Authorization`. La auditoría de esa limitación está en `docs/cobertura.md`. No hubo líneas con `status` nulo ni `X-Frontier-Infra`. El reemplazo no emite `X-Req`. La evaluación no compara headers, y el valor absoluto de ese contador no se puede exigir en un proceso nuevo porque la primera observación ya era 2.
 
 ### Qué sigue siendo hipótesis o desconocido
 

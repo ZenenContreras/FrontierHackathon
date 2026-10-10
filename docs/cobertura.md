@@ -4,11 +4,38 @@ Comparación local del reemplazo contra registros ya guardados. No es una observ
 
 La evaluación compara status HTTP y cuerpo. Si ambos cuerpos son JSON, el orden de las claves no importa; los arrays, strings y números sí. Los headers no se comparan. `tests/differential.test.ts` usa esa misma comparación.
 
-Emparejamiento: `experimentos.jsonl` no guarda método ni ruta. Esos datos salen de `tools/sequences`, y el cuerpo de cada paso coincidió con el campo `request` del log. `s4` se reprodujo sin `Authorization` y `s5` con `Bearer invalid-token`, porque así lo dicen sus hipótesis y sus respuestas. `s6b` no tiene archivo de secuencia: la hipótesis dice `GET /no-existe` con `Bearer invalid-token` y `request` es `null`. Si esa hipótesis dejara de decirlo, el caso quedaría como no comparable.
+Emparejamiento: el esquema oficial de `experimentos.jsonl` guarda `request`, `status` y `response`. No guarda método, ruta ni `Authorization`. El ledger `tools/state/append-ledger.json` solo une la clave de intento con el `id`; tampoco guarda la petición. Una coincidencia de status y cuerpo no demuestra que la petición HTTP completa estuviera capturada.
 
-Ninguna de las 127 líneas tiene `status` nulo ni `X-Frontier-Infra`. No se trató un fallo de laboratorio como evidencia.
+`tools/sequences` aporta método y ruta. En las 126 líneas que tienen archivo, la hipótesis del archivo es idéntica a la del log y el cuerpo del paso es igual a `request`. Eso corrobora el artefacto, no es una captura de red. En 23 de esas líneas la hipótesis registrada no contiene a la vez el método y la ruta; salen solo del archivo. `s6b` no tiene archivo: método, ruta y auth se leen de la hipótesis. El header real no está guardado.
 
-Resultado de la última comparación local: 127/127 experimentos coinciden en status y cuerpo; 0 difieren; 0 no comparables. Los 20 ejemplos de `pruebas/ejemplos.jsonl`, tras `POST /__reset`, también coinciden. El reemplazo no envió `X-Req` en ninguna de esas respuestas. El original sí lo envió en 87 líneas. Ese header queda fuera del contrato evaluado. El valor absoluto no se puede exigir en un proceso nuevo: la primera observación ya era 2 y el contador era de sesión.
+La autenticación del test es un sustituto local. El token válido de las pruebas no es el token del participante, que no está en el log. Donde la hipótesis no dice cómo se autorizó la llamada, el test asume el valor por defecto del laboratorio (`bearer`). Eso no es verificable.
+
+Ninguna de las 127 líneas tiene `status` nulo ni `X-Frontier-Infra`.
+
+Resultado local, no porcentaje de fidelidad del original: al reenviar esas peticiones reconstruidas, 127/127 status y cuerpos coinciden con el log y 20/20 ejemplos coinciden tras un reset inyectado. Diferencias de status o cuerpo: 0. Solicitudes HTTP completas presentes en el esquema oficial: 0. `X-Req` no entra en esa comparación. El original lo envió en 87 líneas; el reemplazo no lo emite. La evaluación no compara headers.
+
+## Auditoría de la comparación diferencial
+
+| Clase | Cantidad | Qué está registrado | Qué no lo está |
+| --- | --- | --- | --- |
+| Solicitud HTTP completa en el esquema oficial | 0 | — | Método, ruta y `Authorization` no tienen campo. |
+| Líneas del log con status y cuerpo comparados en local | 127 | `status`, `response`, `request` | La petición reenviada se reconstruye. |
+| De ellas, con archivo de secuencia e hipótesis idéntica | 126 | El texto de `hipotesis` coincide con `tools/sequences` | El archivo no es una captura de red. |
+| De esas 126, hipótesis sin método y ruta a la vez | 23 | El mensaje está en la hipótesis; el cuerpo, en `request` | `POST /msg` sale solo del archivo. Ids 99–108, 110–113, 116–120 y 123–126. |
+| Reconstruida solo desde la hipótesis | 1 | Id 31, `s6b`: status 404 y `E404`; `request` null | No hay archivo. Método, ruta y auth se leen del texto. |
+| Auth declarada en la hipótesis | 14 | s4 sin header (11–15); s5 `invalid-token` (16–18); s6b (31); Bearer válido nombrado en 1, 2, 20, 22 y 39 | El header enviado no se guardó. |
+| Auth no declarada; el test asume `bearer` | 113 | Cuerpo y respuesta | El modo real no es verificable. |
+| Ejemplos de la mañana | 20 | `request`, `status`, `response` | No hay método, ruta, auth ni reset en el archivo. El test inyecta `POST /__reset` y `POST /msg`. |
+| Coincidencias locales de status y cuerpo | 147 | 127 + 20 | No son captura completa ni porcentaje de fidelidad. |
+| Diferencias de status o cuerpo en ese replay | 0 | — | No cubre `X-Req`. |
+| `X-Req` registrado y no reproducido | 87 | Valor en el log | El test no exige ese header. |
+| Pruebas solo del reemplazo | aislamiento y reinicio de proceso | Ninguna línea del log | `tests/sequences.test.ts`. No son observaciones del original. |
+
+`s4`: las cinco hipótesis y conclusiones dicen que no había `Authorization`. El cuerpo de 13 es `{"m":"PING;64"}`. El de 14 es el texto `{`. El `Content-Type: application/json` de 14 está en el archivo de secuencia y no en el log. `s5`: las tres hipótesis dicen `Bearer invalid-token`; no guardan el header. `s6b`: la conclusión repite 404 y `E404`, pero la petición solo está en la hipótesis. El ledger solo registra `s6b-1` → id 31.
+
+Cada secuencia corre en un proceso nuevo y, dentro de ella, los pasos comparten estado. Las altas aceptadas están en s10–s13 y s17–s19, acotadas por `POST /__reset`. s14–s16 no crean cuentas. No hay contaminación de saldos entre secuencias en los casos registrados. `X-Req` sí continuaba entre secuencias en el original; el test no lo compara. Los ejemplos usan otro proceso y un reset que el archivo no contiene.
+
+El comparador de `tests/differential.test.ts` exige el status numérico y, para JSON, igualdad estructural: claves, tipos, arrays y strings exactos, incluido el espacio final de `E301`. El orden de claves no se exige, igual que la evaluación. No normaliza textos. No compara headers. `tests/replay.test.ts` usa `JSON.stringify`, más estricto con el orden, y no incluye `s6b`.
 
 ## Rutas, métodos y autenticación
 
