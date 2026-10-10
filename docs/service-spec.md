@@ -61,8 +61,6 @@ Un segmento vacío se detecta antes de interpretar el control. Solo se vio en me
 
 El campo extra se ignora. Solo se vio `extra: 1` junto a un `PING` que no valida el contenido del control.
 
-### Hipótesis
-
 El control numérico de cualquier comando distinto de `PING` es `(1 - 3R) mod 97`. `R` es el entero del mensaje sin el segmento de control: cada letra, sin distinguir mayúsculas, vale su posición `A=1` … `Z=26`; los dígitos se conservan; el resto de caracteres, incluidos `;` y `-`, se omite. Reproduce los controles válidos de `ALTA`, `DEPOSITO`, `TRANSFER`, `CONSULTA`, `SALDOS` y `ANULA`, y rechaza los inválidos de los ids 44, 82, 100, 102, 105, 106, 107, 108, 110 y 111. En `AC-` y `OP-` de cuatro dígitos coincide con `(17 - 3n)`, `(41 - 3n)` y `(75 - 3k) mod 97`. No se envió un mensaje nuevo al original para contrastarla fuera de esos registros.
 
 ### Desconocido
@@ -100,17 +98,17 @@ Los ejemplos de la mañana muestran `PING`, `ALTA`, `CONSULTA`, `DEPOSITO`, `TRA
 
 `PING` no valida el contenido del control y los demás comandos sí. No se probó otro comando con control `5X` que además tuviera aridad correcta y control numérico válido.
 
-Los seis comandos observados ignoran mayúsculas en el nombre del comando. No se probó un nombre de persona en otra grafía: `Lucia` y `lucia` pueden tener controles distintos.
+Los seis comandos observados ignoran mayúsculas en el nombre del comando. No se probó `Lucia` frente a `lucia`. La fórmula de la sección 2 les da el mismo control; esa igualdad no se midió.
 
 `SALDOS` no está reconocido en ese mensaje. Eso no demuestra que no exista con otra aridad o que el servicio no lo añada después.
 
-El límite de transferencia está por encima de 100000 y no admite 120000 en el caso probado. El umbral exacto no se midió.
+El límite medido en V1 aceptaba 100000 y rechazaba 120000. En V2, 100000 y 120000 responden `E506` y 40000 sigue aceptándose. El umbral entre 40000 y 100000 no se midió.
 
 La anulación revierte la transferencia probada y el depósito probado. No se anuló una transferencia y un depósito encadenados de forma que el saldo quedara negativo.
 
 ### Desconocido
 
-Fórmula del control. Importes 0, negativos, con ceros a la izquierda o mayores que los probados. Importe de transferencia igual al saldo. Transferencia a la misma cuenta, cuenta origen inexistente y destino inexistente. Anulación de un depósito después de una transferencia que ya gastó parte de ese saldo. Identificadores después de `AC-0002` y `OP-0004` sin reset: `OP-0004` solo aparece en `ejemplos.jsonl` n=18. Si un nombre distinto de `Lucia` también puede duplicarse: solo se repitió ese nombre.
+Importes 0, negativos, con ceros a la izquierda o mayores que los probados. Importe de transferencia igual al saldo. Transferencia a la misma cuenta, cuenta origen inexistente y destino inexistente. Anulación de un depósito después de una transferencia que ya gastó parte de ese saldo. Identificadores después de `AC-0002` y `OP-0004` sin reset: `OP-0004` solo aparece en `ejemplos.jsonl` n=18. Si un nombre distinto de `Lucia` también puede duplicarse: solo se repitió ese nombre.
 
 ## 4. Memoria entre requests
 
