@@ -230,6 +230,8 @@ El reemplazo guarda cuentas, operaciones y los dos contadores en memoria, separa
 
 Eso está cubierto por `tests/sequences.test.ts`, `tests/commands.test.ts`, `tests/store.test.ts` y la regresión de `tools/sequences`.
 
+El paso 6 no llamó al original. Reprodujo en local las 127 líneas de `experimentos.jsonl` y las 20 de `pruebas/ejemplos.jsonl`. Status y cuerpo coincidieron; no hubo líneas con `status` nulo ni `X-Frontier-Infra`. El método y la ruta no están en el log: salen de `tools/sequences`, salvo `s6b`, reconstruida desde su hipótesis. La matriz está en `docs/cobertura.md`. El reemplazo no emite `X-Req`. La evaluación no compara headers, y el valor absoluto de ese contador no se puede exigir en un proceso nuevo porque la primera observación ya era 2.
+
 ### Qué sigue siendo hipótesis o desconocido
 
 | Tema | Estado |
@@ -243,6 +245,6 @@ Eso está cubierto por `tests/sequences.test.ts`, `tests/commands.test.ts`, `tes
 | Saldo exacto de la cuenta destino después de anular `OP-0003` | No consultado. Sí se consultó el origen, que quedó en 210000. `ejemplos.jsonl` n=16 es compatible con que el destino no conservara los 100000, pero no demuestra el saldo exacto. |
 | `E507` y el contador de operaciones | Desconocido. Sí se sabe que no cambió los saldos en 0. |
 | `POST /__reset` con cuerpo mientras hay cuentas | Desconocido. Con cuerpo y sin cuentas respondió `{"ok":true}`. |
-| `X-Req` en el reemplazo | El original lo incrementa en `POST /msg` y el reset no lo pone a cero. El reemplazo todavía no emite ese header. No se ha convertido en un hecho del reemplazo. |
+| `X-Req` en el reemplazo | El original lo envió en 87 líneas y no lo reinició con el reset. El reemplazo no lo emite. No es una diferencia de status ni de cuerpo, que son lo que compara la evaluación. El valor inicial observado fue 2. |
 | `AC-0003` y ids posteriores no vistos | El reemplazo continúa la numeración de cuatro dígitos. Solo están observados `AC-0001`, `AC-0002`, `OP-0001` a `OP-0003` en experimentos, y `OP-0004` en los ejemplos de la mañana. |
 

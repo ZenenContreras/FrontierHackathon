@@ -31,7 +31,7 @@ async function listen(tokens: string[]): Promise<{ server: Server; base: string 
   return { server, base: `http://127.0.0.1:${address.port}` };
 }
 
-test("las secuencias con Bearer valido reproducen status y cuerpo registrados", async () => {
+test("las secuencias registradas reproducen status y cuerpo, con el auth de s4 y s5", async () => {
   const experiments = readFileSync("experimentos.jsonl", "utf8")
     .trim()
     .split("\n")
@@ -50,9 +50,6 @@ test("las secuencias con Bearer valido reproducen status y cuerpo registrados", 
       seq: string;
       steps: Step[];
     };
-    if (sequence.seq === "s4" || sequence.seq === "s5") {
-      continue;
-    }
     const expected = bySeq.get(sequence.seq) ?? [];
     const { server, base } = await listen([TOKEN]);
     try {
@@ -63,7 +60,13 @@ test("las secuencias con Bearer valido reproducen status y cuerpo registrados", 
           failures.push(`${sequence.seq} paso ${index + 1} sin par`);
           continue;
         }
-        const headers: Record<string, string> = { Authorization: `Bearer ${TOKEN}` };
+        const headers: Record<string, string> = {};
+        const auth = sequence.seq === "s4" ? "omit" : sequence.seq === "s5" ? "invalid" : "bearer";
+        if (auth === "bearer") {
+          headers.Authorization = `Bearer ${TOKEN}`;
+        } else if (auth === "invalid") {
+          headers.Authorization = "Bearer invalid-token";
+        }
         let body: string | undefined;
         if (step.rawBody) {
           body = String(step.body ?? "");

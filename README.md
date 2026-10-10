@@ -152,9 +152,12 @@ y `TRANSFER` todavía no está confirmada.
 ```bash
 npm install
 npm test
+npm run typecheck
 npm run build
 npm start
 ```
+
+`npm test` y `npm run typecheck` no llaman al original. La comparación de status y cuerpo contra `experimentos.jsonl` y `pruebas/ejemplos.jsonl` está en `tests/differential.test.ts`. La matriz está en `docs/cobertura.md`.
 
 En desarrollo, `npm run dev` recompila al guardar. El puerto sale de `PORT` y, si no existe, es
 `3000`. El proceso escucha en `0.0.0.0`.

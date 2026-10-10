@@ -1,0 +1,265 @@
+// Comparación local contra registros ya guardados. No contacta el original.
+import assert from "node:assert/strict";
+import { once } from "node:events";
+import { readFileSync, readdirSync } from "node:fs";
+import type { Server } from "node:http";
+import type { AddressInfo } from "node:net";
+import path from "node:path";
+import test from "node:test";
+import { createApp } from "../src/app.js";
+
+const TOKEN = "differential-token";
+const INVALID = "invalid-token";
+
+type Auth = "bearer" | "omit" | "invalid";
+
+interface Experiment {
+  id: number;
+  seq: string;
+  x_req: number | string | null;
+  status: number | null;
+  response: unknown;
+  request: unknown;
+  hipotesis: string;
+  conclusion?: string;
+}
+
+interface Step {
+  method: string;
+  path: string;
+  body?: unknown;
+  rawBody?: boolean;
+  contentType?: string;
+}
+
+interface Probe {
+  id: number;
+  seq: string;
+  auth: Auth;
+  step: Step;
+  expected: Experiment;
+}
+
+function loadExperiments(): Experiment[] {
+  return readFileSync("experimentos.jsonl", "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as Experiment);
+}
+
+function loadSequences(): Map<string, Step[]> {
+  const sequences = new Map<string, Step[]>();
+  for (const file of readdirSync("tools/sequences")) {
+    if (!file.endsWith(".json")) {
+      continue;
+    }
+    const parsed = JSON.parse(readFileSync(path.join("tools/sequences", file), "utf8")) as {
+      seq: string;
+      steps: Step[];
+    };
+    sequences.set(parsed.seq, parsed.steps);
+  }
+  return sequences;
+}
+
+function authFor(seq: string): Auth {
+  if (seq === "s4") {
+    return "omit";
+  }
+  if (seq === "s5") {
+    return "invalid";
+  }
+  return "bearer";
+}
+
+function sameRequest(step: Step, request: unknown): boolean {
+  if (step.rawBody) {
+    return request === step.body;
+  }
+  if (step.body === undefined) {
+    return request === null;
+  }
+  return JSON.stringify(step.body) === JSON.stringify(request);
+}
+
+function pairExperiments(rows: Experiment[], sequences: Map<string, Step[]>): { probes: Probe[]; unpaired: string[] } {
+  const bySeq = new Map<string, Experiment[]>();
+  for (const row of rows) {
+    const list = bySeq.get(row.seq) ?? [];
+    list.push(row);
+    bySeq.set(row.seq, list);
+  }
+  const probes: Probe[] = [];
+  const unpaired: string[] = [];
+  for (const [seq, recorded] of bySeq) {
+    if (seq === "s6b") {
+      const row = recorded[0];
+      if (recorded.length !== 1 || row === undefined) {
+        unpaired.push("s6b sin una sola línea");
+        continue;
+      }
+      if (!row.hipotesis.includes("GET /no-existe") || !row.hipotesis.includes("invalid-token") || row.request !== null) {
+        unpaired.push(`s6b id ${row.id} no se puede reconstruir desde la hipótesis`);
+        continue;
+      }
+      probes.push({
+        id: row.id,
+        seq,
+        auth: "invalid",
+        step: { method: "GET", path: "/no-existe" },
+        expected: row,
+      });
+      continue;
+    }
+    const steps = sequences.get(seq);
+    if (steps === undefined || steps.length !== recorded.length) {
+      unpaired.push(`${seq} sin pareja de secuencia`);
+      continue;
+    }
+    for (let index = 0; index < steps.length; index += 1) {
+      const step = steps[index];
+      const row = recorded[index];
+      if (step === undefined || row === undefined || !sameRequest(step, row.request)) {
+        unpaired.push(`${seq}#${index + 1} el cuerpo no coincide con el registro`);
+        continue;
+      }
+      probes.push({ id: row.id, seq, auth: authFor(seq), step, expected: row });
+    }
+  }
+  return { probes, unpaired };
+}
+
+async function listen(): Promise<{ server: Server; base: string }> {
+  const server = createApp({ tokens: [TOKEN] }).listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address() as AddressInfo;
+  return { server, base: `http://127.0.0.1:${address.port}` };
+}
+
+async function close(server: Server): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    server.close((err) => (err ? reject(err) : resolve()));
+  });
+}
+
+async function send(base: string, auth: Auth, step: Step): Promise<{ status: number; body: unknown; xReq: string | null }> {
+  const headers: Record<string, string> = {};
+  if (auth === "bearer") {
+    headers.Authorization = `Bearer ${TOKEN}`;
+  } else if (auth === "invalid") {
+    headers.Authorization = `Bearer ${INVALID}`;
+  }
+  let body: string | undefined;
+  if (step.rawBody) {
+    body = String(step.body ?? "");
+    if (step.contentType !== undefined) {
+      headers["Content-Type"] = step.contentType;
+    }
+  } else if (step.body !== undefined) {
+    body = JSON.stringify(step.body);
+    headers["Content-Type"] = "application/json";
+  }
+  const response = await fetch(`${base}${step.path}`, {
+    method: step.method,
+    headers,
+    ...(body !== undefined ? { body } : {}),
+  });
+  const text = await response.text();
+  let parsed: unknown = text;
+  if (text.length > 0) {
+    try {
+      parsed = JSON.parse(text) as unknown;
+    } catch {
+      parsed = text;
+    }
+  }
+  return { status: response.status, body: parsed, xReq: response.headers.get("x-req") };
+}
+
+function sameBody(actual: unknown, expected: unknown): boolean {
+  if (typeof expected === "string") {
+    return actual === expected;
+  }
+  try {
+    assert.deepEqual(actual, expected);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+test("el reemplazo coincide en status y cuerpo con los registros y no llama al original", async () => {
+  const rows = loadExperiments();
+  const { probes, unpaired } = pairExperiments(rows, loadSequences());
+  const bodyDiff: string[] = [];
+  let xReqOnReplacement = 0;
+  const bySeq = new Map<string, Probe[]>();
+  for (const probe of probes) {
+    const list = bySeq.get(probe.seq) ?? [];
+    list.push(probe);
+    bySeq.set(probe.seq, list);
+  }
+
+  for (const group of bySeq.values()) {
+    const { server, base } = await listen();
+    try {
+      for (const probe of group) {
+        const actual = await send(base, probe.auth, probe.step);
+        if (actual.xReq !== null) {
+          xReqOnReplacement += 1;
+        }
+        if (probe.expected.status === null || !sameBody(actual.body, probe.expected.response) || actual.status !== probe.expected.status) {
+          bodyDiff.push(
+            `id ${probe.id} ${probe.seq} ${probe.step.method} ${probe.step.path} ` +
+              `esperado ${String(probe.expected.status)} ${JSON.stringify(probe.expected.response)} ` +
+              `obtuvo ${actual.status} ${JSON.stringify(actual.body)}`,
+          );
+        }
+      }
+    } finally {
+      await close(server);
+    }
+  }
+
+  const ejemplos = readFileSync("pruebas/ejemplos.jsonl", "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { status: number; response: unknown; request: { m: string } });
+  const ejemplosDiff: string[] = [];
+  const ejemplosServer = await listen();
+  try {
+    const reset = await send(ejemplosServer.base, "bearer", { method: "POST", path: "/__reset" });
+    assert.deepEqual(reset.body, { ok: true });
+    for (const [index, row] of ejemplos.entries()) {
+      const actual = await send(ejemplosServer.base, "bearer", {
+        method: "POST",
+        path: "/msg",
+        body: row.request,
+      });
+      if (actual.status !== row.status || !sameBody(actual.body, row.response)) {
+        ejemplosDiff.push(`ejemplo ${index + 1} esperado ${row.status} obtuvo ${actual.status}`);
+      }
+      if (actual.xReq !== null) {
+        xReqOnReplacement += 1;
+      }
+    }
+  } finally {
+    await close(ejemplosServer.server);
+  }
+
+  const infra = rows.filter((row) => {
+    const text = `${row.conclusion ?? ""} ${JSON.stringify(row.response)}`;
+    return row.status === null || text.includes("X-Frontier") || text.includes("rate-limit");
+  });
+  const recordedXReq = rows.filter((row) => row.x_req !== null).length;
+
+  assert.deepEqual(unpaired, []);
+  assert.deepEqual(bodyDiff, []);
+  assert.deepEqual(ejemplosDiff, []);
+  assert.deepEqual(infra, []);
+  assert.equal(probes.length, rows.length);
+  assert.equal(rows.length, 127);
+  assert.equal(ejemplos.length, 20);
+  assert.equal(recordedXReq, 87);
+  assert.equal(xReqOnReplacement, 0);
+});
