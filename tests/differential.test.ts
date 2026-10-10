@@ -1,7 +1,7 @@
 // Comparación local de status y cuerpo. No contacta el original.
-// El log no guarda método, ruta ni Authorization. Esos datos salen de tools/sequences
-// o, en s6b, de la hipótesis. El Bearer válido del test es un token ficticio de la lista
-// local, no el token del participante. Una coincidencia aquí no es una captura de la petición.
+// El log no guarda método, ruta ni Authorization. s6b no tiene archivo y no se reenvía.
+// El Bearer válido del test es un token ficticio de la lista local, no el token del participante.
+// Una coincidencia aquí no es una captura de la petición.
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import { readFileSync, readdirSync } from "node:fs";
@@ -95,26 +95,11 @@ function pairExperiments(rows: Experiment[], sequences: Map<string, Step[]>): { 
   const probes: Probe[] = [];
   const unpaired: string[] = [];
   for (const [seq, recorded] of bySeq) {
-    if (seq === "s6b") {
-      const row = recorded[0];
-      if (recorded.length !== 1 || row === undefined) {
-        unpaired.push("s6b sin una sola línea");
-        continue;
-      }
-      if (!row.hipotesis.includes("GET /no-existe") || !row.hipotesis.includes("invalid-token") || row.request !== null) {
-        unpaired.push(`s6b id ${row.id} no se puede reconstruir desde la hipótesis`);
-        continue;
-      }
-      probes.push({
-        id: row.id,
-        seq,
-        auth: "invalid",
-        step: { method: "GET", path: "/no-existe" },
-        expected: row,
-      });
+    const steps = sequences.get(seq);
+    if (steps === undefined) {
+      unpaired.push(`${seq} sin archivo de secuencia; no se reconstruye la petición`);
       continue;
     }
-    const steps = sequences.get(seq);
     if (steps === undefined || steps.length !== recorded.length) {
       unpaired.push(`${seq} sin pareja de secuencia`);
       continue;
@@ -256,11 +241,11 @@ test("el reemplazo coincide en status y cuerpo con los registros y no llama al o
   });
   const recordedXReq = rows.filter((row) => row.x_req !== null).length;
 
-  assert.deepEqual(unpaired, []);
+  assert.deepEqual(unpaired, ["s6b sin archivo de secuencia; no se reconstruye la petición"]);
   assert.deepEqual(bodyDiff, []);
   assert.deepEqual(ejemplosDiff, []);
   assert.deepEqual(infra, []);
-  assert.equal(probes.length, rows.length);
+  assert.equal(probes.length, 126);
   assert.equal(rows.length, 127);
   assert.equal(ejemplos.length, 20);
   assert.equal(recordedXReq, 87);
