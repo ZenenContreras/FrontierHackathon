@@ -208,7 +208,7 @@ Identificadores observados en la oleada 2, después del reset 144: `AC-0001`, `A
 
 No están identificados los tres. Hay una diferencia observada, no tres.
 
-1. **Saldo de `CONSULTA` tras depósito de 250000 y transferencia de 40000.** Destino, experimento 149 frente al 73: string `"400.00"` en vez del número `40000`. Origen, experimento 157: string `"2100.00"`. V1 no midió ese origen en el mismo paso; el entero comparable por aritmética y por el experimento 78 es `210000`. Los dos saldos observados en V2 son strings con dos decimales e iguales al entero de V1 dividido por 100. Eso está respaldado para estas dos cuentas y estos importes. No basta para afirmar que todo saldo, incluido 0, usa esa conversión. Los otros dos cambios anunciados no tienen evidencia. `src/` no se corrige en esta fase.
+1. **Saldo de `CONSULTA`.** Destino, experimento 149 frente al 73: string `"400.00"` en vez del número `40000`. Origen, experimento 157: string `"2100.00"`; el entero comparable, inferido y coherente con el experimento 78, es `210000`. Cero, experimento 162 frente al 126: string `"0.00"` en vez del número `0`, después de anular el depósito. Los tres son strings con dos decimales e iguales al entero de V1 dividido por 100. El cero ya no queda fuera de esa representación. Sigue sin medirse en V2 otro importe, por ejemplo 700 o 40700. No es un segundo cambio. Los otros dos cambios anunciados no tienen evidencia. `src/` no se corrige en esta fase.
 
 ## 11. Hipótesis descartadas y evidencia contraria
 
@@ -223,7 +223,7 @@ La oleada 2 descarta, para esta secuencia y este token, que el cambio esté en e
 
 El seguimiento descarta, para este prefijo, que el origen conserve el entero `210000` y que el saldo nuevo sea el mismo entero en string (`"210000.00"`). También debilita que el cambio de formato afecte solo a `AC-0002`: el origen también llegó como string escalado. No se volvió a consultar `AC-0002` en la misma secuencia.
 
-Sigue abierto el saldo 0, otros importes, la anulación y si el depósito guarda otra escala que la consulta solo formatea. Esas respuestas de depósito y transferencia siguen sin traer saldo.
+El experimento 162 cierra el saldo 0 para el estado de `s19`: es el string `"0.00"`, no un cambio aparte. Siguen abiertos otros importes, la anulación de una transferencia, su repetición y si el depósito guarda otra escala que la consulta solo formatea. La anulación en minúsculas de `OP-0001` coincidió con el experimento 125. Esas respuestas de depósito y transferencia siguen sin traer saldo.
 
 ## 12. Incógnitas y limitaciones
 
@@ -238,7 +238,7 @@ Sigue abierto el saldo 0, otros importes, la anulación y si el depósito guarda
 
 ## 13. Riesgo para el reemplazo
 
-El reemplazo devuelve `saldo` numérico. Los experimentos 149 y 157 muestran strings `"400.00"` y `"2100.00"` donde la versión 1 usaba enteros. Si la evaluación repite esos casos, el reemplazo falla por tipo y valor. No se modifica `src/` en esta fase: falta saber el saldo 0 y no están identificados los otros dos cambios.
+El reemplazo devuelve `saldo` numérico. Los experimentos 149, 157 y 162 muestran strings `"400.00"`, `"2100.00"` y `"0.00"` donde la versión 1 usaba enteros. Si la evaluación repite esos casos, el reemplazo falla por tipo y valor. No se modifica `src/` en esta fase: no están identificados los otros dos cambios.
 
 ## 14. Plan de corrección y regresión
 
@@ -414,4 +414,18 @@ Oleada 1, para el debrief:
 - `tools/cli.ts`, `tools/client.ts`, `tools/record.ts`, `tools/types.ts`, `tools/quota.ts`, `tools/env.ts`, `tools/interpret.ts`, `tools/sequence.ts`, `tools/sequences/*.json`.
 - `tools/state/quota.json`, estructura de `tools/state/append-ledger.json` sin volcar intentos.
 - `src/config/env.ts`, `src/core/execute.ts` y la ausencia de la URL del original en `src/`.
-- No se desplegó. No se modificó `src/`. Oleada 1: ids 128–143. Oleada 2: ids 144–151. Seguimiento: ids 152–157.
+- No se desplegó. No se modificó `src/`. Oleada 1: ids 128–143. Oleada 2: ids 144–151. Seguimiento: ids 152–157. Anulación de depósito: ids 158–162.
+
+## 17. Anulación de depósito, ids 158–162
+
+Ejecutada el 2026-10-10 entre 22:18:03Z y 22:18:13Z. Cinco solicitudes. No se envió la sexta: el id 161 no fue `E301`.
+
+| ID | Referencia | Status y cuerpo | Clasificación |
+| --- | --- | --- | --- |
+| 158 | 122 | `200 {"ok":true}` | coincide. Montaje. |
+| 159 | 123 | `201 {"cuentaId":"AC-0001"}` | coincide. Montaje. |
+| 160 | 124 | `200` `recieved`, `OP-0001` | coincide. Montaje. El cuerpo no trae saldo. |
+| 161 | 125 | `200 {"ok":true,"anulada":"OP-0001"}` | coincide. Caso V1 equivalente. No es un cambio. |
+| 162 | 126 | `200` saldo string `"0.00"` | difiere del número `0`. Alcance del formato ya observado, no un cambio independiente. |
+
+La reversión del depósito queda respaldada: el cuerpo de anulación coincidió y el saldo no quedó en 250000 ni en `"2500.00"`. La mayúscula `ANULA;OP-0001;72` sigue sin éxito medido en V1 ni en V2. No se confirma una regla para importes distintos de 0, 40000 y 210000. Los otros dos cambios del ticket siguen sin evidencia. No se propone ni se ejecuta otra oleada en este cierre.
