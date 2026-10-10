@@ -136,3 +136,69 @@ afirmación falsa resta.
   una tendrá su propio estado.
 - Si tu reemplazo no sabe qué responder ante algo, decide qué hace por defecto y anótalo en la
   especificación como **supuesto**.
+
+## Ejecución local del reemplazo
+
+El servidor base está en `src/` y se arranca con `src/server.ts`. No llama al servicio original.
+El estado vive en memoria, aislado por token, y se pierde al reiniciar el proceso. Hay que
+desplegar una sola instancia.
+
+Las respuestas actuales no reproducen el contrato confirmado del original. `GET /health` devuelve
+200 con cuerpo vacío para cumplir el requisito de “listo”; el cuerpo real no se ha medido.
+`POST /__reset` reinicia el estado del token y responde 200 con cuerpo vacío: ese status y ese
+cuerpo son un supuesto. `POST /msg` responde 501 con `{"provisional":true,"route":"POST /msg"}`
+porque los comandos todavía no están caracterizados. Las rutas o métodos no registrados responden
+404 con un JSON provisional, no con el HTML por defecto de Express.
+
+```bash
+npm install
+npm test
+npm run build
+npm start
+```
+
+En desarrollo, `npm run dev` recompila al guardar. El puerto sale de `PORT` y, si no existe, es
+`3000`. El proceso escucha en `0.0.0.0`.
+
+No hace falta un archivo `.env` para arrancar. `.env.example` documenta `PORT` y las variables que
+solo podrán usar las herramientas de laboratorio. Esas herramientas no forman parte de este proceso.
+
+## Laboratorio
+
+El laboratorio vive en `tools/` y se ejecuta aparte del servidor. `npm start` no lo carga y `src/`
+no lo importa. Solo esta herramienta puede llamar al servicio original.
+
+```bash
+cp .env.example .env
+# Edita .env y pon PARTICIPANT_TOKEN. No lo pases como argumento ni lo subas.
+npm run lab --silent -- --help
+npm run lab --silent -- probe --dry-run --seq s0 --hipotesis "GET /health responde 200" --method GET --path /health
+npm run lab --silent -- probe --seq s1 --hipotesis "GET /health responde 200" --method GET --path /health
+npm run lab --silent -- sequence --file secuencia.json
+```
+
+Usa `--silent`. Sin esa opción, npm imprime los argumentos antes de que el laboratorio pueda
+redactarlos. El token no debe ir en la hipótesis, en la ruta ni en ningún otro argumento.
+
+Una secuencia es un JSON con `seq` y `steps`. Cada paso necesita `method`, `path` e `hipotesis`.
+El laboratorio no inserta `POST /__reset`: si la secuencia debe empezar de cero, el reset va como
+paso explícito. No lances una secuencia sin una hipótesis por paso.
+
+Cada invocación nueva envía solicitudes reales, salvo `--dry-run`. No hay reintentos automáticos.
+Si el proceso se interrumpe, conserva el `attempt-prefix` impreso y repite con `--attempt-prefix`:
+el mismo intento no se reenvía ni se duplica en el log. Una invocación sin ese prefijo es un
+intento nuevo y vuelve a consumir cuota.
+
+El ritmo local mínimo es 120 ms entre solicitudes y no puede bajar de 100 ms. El contador local
+se detiene en 8000 solicitudes por día UTC. Una respuesta con `X-Frontier-Infra` se registra, se
+marca en `conclusion` y no debe usarse como evidencia del servicio. Un fallo de conexión o un
+tiempo de espera también se registra, con `status`, `response` y `x_req` en `null`: eso significa
+ausencia, no un código observado. Esas líneas no son evidencia funcional.
+
+`request` es el cuerpo enviado. Si no había cuerpo, queda `null`. El método y la ruta no forman
+parte del esquema oficial, así que no se añaden como campos; deben quedar en `hipotesis` y en la
+salida del comando. `x_req` se guarda como número solo cuando el header es un entero completo;
+en otro caso se conserva el texto. Un cuerpo no JSON se guarda como texto exacto.
+
+Las pruebas de `tests/lab-*.test.ts` son simuladas. No escriben el `experimentos.jsonl` del
+repositorio ni contactan el original.

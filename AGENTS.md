@@ -111,27 +111,46 @@ La estructura inicial del repositorio es:
 ├── .pi/
 │   └── settings.json
 ├── docs/
-│   ├── architecture.md
-│   └── design.md
+│   ├── design.md
+│   └── diagramadearquitectura.md
 ├── pruebas/
 │   └── ejemplos.jsonl
 ├── src/
+│   ├── app.ts
+│   ├── server.ts
+│   ├── config/env.ts
+│   ├── core/
+│   ├── http/
+│   └── state/store.ts
+├── tools/
+│   ├── cli.ts
+│   ├── client.ts
+│   ├── record.ts
+│   └── transport.ts
 ├── tests/
 ├── Agents.md
 ├── experimentos.jsonl
+├── package.json
+├── tsconfig.json
+├── tsconfig.tools.json
 └── README.md
 ```
 
-Esta estructura representa el estado inicial conocido. Los agentes deben inspeccionar los archivos reales antes de asumir que contienen una implementación completa, y en caso de modificar algo documentarlo en este archivo en el text de arriba. 
+Esta estructura es la del repositorio tras el laboratorio. Los agentes deben inspeccionar los archivos reales antes de asumir que contienen una implementación completa, y en caso de modificar algo documentarlo en este archivo en el text de arriba.
+
+El diagrama de arquitectura está en `docs/diagramadearquitectura.md`. `docs/design.md` todavía enlaza `docs/architecture.md`, que no existe en disco. No se ha renombrado ese archivo.
+
+`src/` contiene solo la infraestructura HTTP, el almacén en memoria y un despacho provisional de `POST /msg`. No implementa comandos ni llama al original. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` sigue vacío: las pruebas del laboratorio son simuladas y escriben en archivos temporales.
 
 ### Responsabilidades de los archivos existentes
 
 - `Agents.md`: contexto global, reglas y coordinación entre agentes.
 - `docs/design.md`: documento de diseño del sistema, sus decisiones, restricciones y estrategia de validación.
-- `docs/architecture.md`: diagramas de arquitectura y flujos de ejecución.
+- `docs/diagramadearquitectura.md`: diagramas de arquitectura y flujos de ejecución. El nombre previsto en estas reglas era `docs/architecture.md`; el archivo real tiene otro nombre.
 - `pruebas/ejemplos.jsonl`: ejemplos proporcionados por la organización.
-- `experimentos.jsonl`: registro de las peticiones realizadas al original y sus resultados.
-- `src/`: implementación del reemplazo.
+- `experimentos.jsonl`: registro de las peticiones realizadas al original y sus resultados. Sigue el esquema oficial y no debe recibir resultados simulados.
+- `tools/`: laboratorio de experimentación. Es el único lugar que puede llamar al original.
+- `src/`: implementación del reemplazo. No importa `tools/` ni lee `PARTICIPANT_TOKEN`.
 - `tests/`: pruebas automatizadas.
 - `README.md`: introducción, configuración y comandos del proyecto.
 - `.agents/skills/backend-node-express-clean-architecture/SKILL.md`: recurso de referencia para patrones de arquitectura backend. Debe utilizarse cuando sea pertinente, sin anteponer sus recomendaciones a los requisitos del reto.
