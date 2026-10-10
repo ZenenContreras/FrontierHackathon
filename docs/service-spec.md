@@ -202,17 +202,15 @@ Ninguna diferencia temporal queda pendiente de explicación entre los ejemplos d
 | RIE-02 | El error de comando desconocido observado incluye un espacio final. Hay que reproducirlo, no corregirlo. | 53, 58, 59 | confirmado |
 | RIE-03 | El depósito aceptado dice `recieved`, no `received`. `ALTA` devuelve `cuentaId` y `CONSULTA` devuelve `cuenta_id`. | 62, 63, 71 | confirmado |
 | RIE-04 | Se puede repetir el mismo nombre de alta. | 65 | confirmado |
-| RIE-05 | No hay fórmula general confirmada para el control de `ALTA`, `DEPOSITO` y `TRANSFER`. Los experimentos 102, 110 y 111 descartaron dos predicciones. | 102, 110, 111 | confirmado |
+| RIE-05 | Los experimentos 102, 110 y 111 descartaron dos predicciones lineales. La fórmula de la sección 2 encaja con todos los controles registrados; no hubo una sonda nueva. | 102, 110, 111 | confirmado el descarte; la fórmula general no se volvió a medir |
 
 ### Hipótesis
 
 En V1, 100000 se aceptó y 120000 se rechazó. En V2, los ids 170 y 150/169 rechazan 100000 y 120000 con E506, y el id 148 acepta 40000. El umbral entre 40000 y 100000 no se midió. El reemplazo rechaza `importe >= 100000`. Eso reproduce lo observado; no demuestra que todo importe menor sea válido.
 
-Un control numérico de `ALTA`, `DEPOSITO` o `TRANSFER` que el reemplazo no sabe calcular se acepta, salvo los mensajes ya observados como inválidos. Eso no es una regla del original.
-
 ### Desconocido
 
-Fórmula del control. Aislamiento entre dos tokens válidos. Comandos no vistos. Umbral exacto de transferencia. Anulación cuando la operación dependiente ya movió parte del saldo. Comportamiento si el original cambia después del 2026-10-10.
+Aislamiento entre dos tokens válidos. Comandos no vistos. Umbral exacto de transferencia. Anulación cuando la operación dependiente ya movió parte del saldo. Comportamiento si el original cambia después del 2026-10-10.
 
 ## 8. Estado y secuencias
 

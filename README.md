@@ -146,8 +146,8 @@ desplegar una sola instancia.
 `GET /health` con Bearer válido responde 200 y `{"ok":true}`. `POST /__reset` responde 200 y
 `{"ok":true}` y borra el estado de ese token. `POST /msg` ejecuta los comandos con evidencia.
 Sin token, o con un token distinto de `PARTICIPANT_TOKEN`, esas rutas responden 401. Una ruta o
-método no registrado responde 404 y `E404`. La fórmula general del control de `ALTA`, `DEPOSITO`
-y `TRANSFER` todavía no está confirmada.
+método no registrado responde 404 y `E404`. El control numérico distinto de `PING` usa la fórmula
+que reproduce los controles registrados; no se contrastó con un mensaje nuevo en el original.
 
 ```bash
 npm install

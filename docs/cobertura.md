@@ -76,7 +76,7 @@ El comparador de `tests/differential.test.ts` exige el status numérico y, para 
 | Falta control | 35, 41 | 400 `E103` | `differential.test.ts` | confirmado | |
 | Segmento vacío | 42, 51, 112 | 400 `E104` | `differential.test.ts` | confirmado | |
 | Control mal formado | 45, 54, 55 | 400 `E201` | `differential.test.ts` | confirmado | |
-| Control inválido | 44, 82, 100, 105–108, 110, 111 | 400 `E202` | `differential.test.ts` | confirmado | La fórmula general de `ALTA`, `DEPOSITO` y `TRANSFER` no está confirmada. |
+| Control inválido | 44, 82, 100, 105–108, 110, 111 | 400 `E202` | `differential.test.ts`, `parse.test.ts` | confirmado en esos mensajes | La fórmula `(1-3R) mod 97` los reproduce y no se sondó en un mensaje nuevo. |
 | `SALDOS` | 53, 58, 59, 101 | 400 `E301` con espacio final | `differential.test.ts`, `commands.test.ts` | confirmado | No se incorporó como comando válido. |
 | Aridad inválida | 49, 83 | 400 `E302` | `differential.test.ts` | confirmado | |
 | Orden JSON, control, comando, existencia | 14, 39, 44, 45, 81, 84 | El error observado en cada paso | `differential.test.ts` | confirmado | No cubre precedencias no medidas. |
