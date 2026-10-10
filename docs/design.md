@@ -157,17 +157,3 @@ Estos valores son objetivos de aceptación, no resultados medidos. El estado rev
 5. Añadir estado por token y pruebas de secuencia.
 6. Ejecutar comparación diferencial y guardar los casos reproducibles como regresión.
 7. Desplegar una sola instancia y validar el entrypoint público antes de la hora límite.
-
-## 10. Estado actual y pendientes
-
-En la versión del documento revisada, `experimentos.jsonl` está vacío y no hay resultados de pruebas ejecutadas. Por ello, las reglas que no se desprenden directamente de los ejemplos siguen pendientes de comprobar.
-
-Antes de considerar terminado el reemplazo, deben verificarse como mínimo:
-
-- El contrato real de `POST /__reset` y `GET /health`.
-- El comportamiento de autenticación inválida y rutas o métodos desconocidos.
-- El formato del control y el orden de validación.
-- Los límites de los comandos y las transiciones de estado.
-- La suite completa de 100 pruebas y la latencia por paso.
-- Que el runtime desplegado no pueda llamar al original.
-- Que el entrypoint evaluado sea el último despliegue previsto para las 20:00.
