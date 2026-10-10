@@ -149,6 +149,7 @@ El diagrama de arquitectura está en `docs/diagramadearquitectura.md`. `docs/des
 - `docs/design.md`: documento de diseño del sistema, sus decisiones, restricciones y estrategia de validación.
 - `docs/diagramadearquitectura.md`: diagramas de arquitectura y flujos de ejecución. El nombre previsto en estas reglas era `docs/architecture.md`; el archivo real tiene otro nombre.
 - `docs/service-spec.md`: especificación del comportamiento observado del original. No sustituye a `docs/design.md`.
+- `docs/incidente-fr-0153.md`: investigación del ticket de la versión 2. No sustituye a `docs/service-spec.md` ni afirma cambios que aún no se hayan medido.
 - `pruebas/ejemplos.jsonl`: ejemplos proporcionados por la organización.
 - `experimentos.jsonl`: registro de las peticiones realizadas al original y sus resultados. Sigue el esquema oficial y no debe recibir resultados simulados.
 - `tools/`: laboratorio de experimentación. Es el único lugar que puede llamar al original.

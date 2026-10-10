@@ -142,7 +142,8 @@ function formatResult(result: ProbeResult): string {
   const status = result.record?.status ?? "-";
   const xReq = result.record?.x_req ?? "-";
   const response = result.usableAsEvidence ? ` response=${JSON.stringify(result.record?.response)}` : "";
-  return `id=${id} seq=${result.record?.seq ?? "-"} class=${result.classification} status=${status} x_req=${xReq} ${result.method} ${result.path}${response}`;
+  const headers = result.relevantResponseHeaders === undefined ? "" : ` resp_headers=${JSON.stringify(result.relevantResponseHeaders)}`;
+  return `id=${id} seq=${result.record?.seq ?? "-"} class=${result.classification} status=${status} x_req=${xReq} ${result.method} ${result.path}${response}${headers}`;
 }
 
 function redactingIo(io: CliIo, secret: string): CliIo {

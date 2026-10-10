@@ -102,6 +102,17 @@ export async function executeProbe(input: ProbeInput, ctx: LabContext): Promise<
   }
 }
 
+function relevantResponseHeaders(headers: Record<string, string>): Record<string, string> {
+  const selected: Record<string, string> = {};
+  for (const name of ["content-type", "date", "x-req", "x-frontier-infra"]) {
+    const value = headerValue(headers, name);
+    if (value !== undefined) {
+      selected[name] = value;
+    }
+  }
+  return selected;
+}
+
 export function resolveLabUrl(baseUrl: string, requestPath: string): string {
   let base: URL;
   try {
@@ -180,6 +191,7 @@ function finishHttp(input: ProbeInput, ctx: LabContext, id: number, response: Tr
       classification: "http",
       usableAsEvidence: false,
       message: "cuerpo demasiado grande; no se registró truncado",
+      relevantResponseHeaders: relevantResponseHeaders(response.headers),
     });
   }
 
@@ -210,6 +222,7 @@ function finishHttp(input: ProbeInput, ctx: LabContext, id: number, response: Tr
     classification: infra === undefined ? "http" : "infra",
     usableAsEvidence: infra === undefined,
     message: infra === undefined ? "respuesta HTTP registrada" : "respuesta de infraestructura registrada; no es evidencia funcional",
+    relevantResponseHeaders: relevantResponseHeaders(response.headers),
   });
 }
 
@@ -217,7 +230,12 @@ function writeAndReturn(
   input: ProbeInput,
   ctx: LabContext,
   record: ExperimentRecord,
-  meta: { classification: ProbeResult["classification"]; usableAsEvidence: boolean; message: string },
+  meta: {
+    classification: ProbeResult["classification"];
+    usableAsEvidence: boolean;
+    message: string;
+    relevantResponseHeaders?: Record<string, string>;
+  },
 ): ProbeResult {
   appendRecord(ctx.paths.log, record, ctx.token);
   markRecorded(ctx.paths.ledger, input.attemptKey);
@@ -230,6 +248,7 @@ function writeAndReturn(
     method: input.method,
     path: input.path,
     message: redact(meta.message, ctx.token),
+    ...(meta.relevantResponseHeaders !== undefined ? { relevantResponseHeaders: meta.relevantResponseHeaders } : {}),
   };
 }
 

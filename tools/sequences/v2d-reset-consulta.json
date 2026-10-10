@@ -1,0 +1,18 @@
+{
+  "seq": "v2d",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "v2 POST /__reset sin cuerpo antes de consultar cuenta inexistente; comparar con experimento 68",
+      "conclusion": "comparacion con experimento 68; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"CONSULTA;AC-0001;14\"} tras reset; comparar con experimento 61",
+      "body": { "m": "CONSULTA;AC-0001;14" },
+      "conclusion": "comparacion con experimento 61; clasificacion en docs/fr-0153-capturas.jsonl"
+    }
+  ]
+}

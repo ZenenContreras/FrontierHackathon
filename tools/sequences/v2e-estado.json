@@ -1,0 +1,53 @@
+{
+  "seq": "v2e",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"ALTA;Lucia;82\"} tras reset; comparar con experimento 69",
+      "body": { "m": "ALTA;Lucia;82" },
+      "conclusion": "comparacion con experimento 69; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"ALTA;Mateo;3\"} como segunda alta; comparar con experimento 70",
+      "body": { "m": "ALTA;Mateo;3" },
+      "conclusion": "comparacion con experimento 70; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"DEPOSITO;AC-0001;250000;86\"}; comparar con experimento 71",
+      "body": { "m": "DEPOSITO;AC-0001;250000;86" },
+      "conclusion": "comparacion con experimento 71; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"TRANSFER;AC-0001;AC-0002;40000;86\"}; comparar con experimento 72",
+      "body": { "m": "TRANSFER;AC-0001;AC-0002;40000;86" },
+      "conclusion": "comparacion con experimento 72; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"CONSULTA;AC-0002;11\"} tras transferencia de 40000; comparar con experimento 73",
+      "body": { "m": "CONSULTA;AC-0002;11" },
+      "conclusion": "comparacion con experimento 73; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"TRANSFER;AC-0001;AC-0002;120000;55\"}; comparar con experimento 74",
+      "body": { "m": "TRANSFER;AC-0001;AC-0002;120000;55" },
+      "conclusion": "comparacion con experimento 74; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "v2 POST /__reset sin cuerpo al cerrar la secuencia de estado; comparar con experimento 79",
+      "conclusion": "comparacion con experimento 79; clasificacion en docs/fr-0153-capturas.jsonl"
+    }
+  ]
+}

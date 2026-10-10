@@ -73,6 +73,7 @@ export interface ProbeResult {
   method: string;
   path: string;
   message: string;
+  relevantResponseHeaders?: Record<string, string>;
 }
 
 export interface LabPaths {

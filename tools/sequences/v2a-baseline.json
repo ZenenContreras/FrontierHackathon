@@ -1,0 +1,79 @@
+{
+  "seq": "v2a",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "v2 POST /__reset sin cuerpo con Bearer; comparar con experimento 2",
+      "conclusion": "comparacion con experimento 2; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"PING;64\"} con Bearer; comparar con experimento 4",
+      "body": { "m": "PING;64" },
+      "conclusion": "comparacion con experimento 4; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "GET",
+      "path": "/no-existe",
+      "hipotesis": "v2 GET /no-existe con Bearer; comparar con experimento 20",
+      "conclusion": "comparacion con experimento 20; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/MSG",
+      "hipotesis": "v2 POST /MSG {\"m\":\"PING;64\"} con Bearer; comparar con experimento 29",
+      "body": { "m": "PING;64" },
+      "conclusion": "comparacion con experimento 29; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg sin cuerpo y sin Content-Type; comparar con experimento 32",
+      "conclusion": "comparacion con experimento 32; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {} con Bearer; comparar con experimento 33",
+      "body": {},
+      "conclusion": "comparacion con experimento 33; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"\"} con Bearer; comparar con experimento 35",
+      "body": { "m": "" },
+      "conclusion": "comparacion con experimento 35; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"PING;\"} con Bearer; comparar con experimento 42",
+      "body": { "m": "PING;" },
+      "conclusion": "comparacion con experimento 42; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"NOPE;5X\"} con Bearer; comparar con experimento 45",
+      "body": { "m": "NOPE;5X" },
+      "conclusion": "comparacion con experimento 45; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"NOPE;1\"} con Bearer; comparar con experimento 44",
+      "body": { "m": "NOPE;1" },
+      "conclusion": "comparacion con experimento 44; clasificacion en docs/fr-0153-capturas.jsonl"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "v2 POST /msg {\"m\":\"SALDOS;AC-0001;38\"} con Bearer; comparar con experimento 53",
+      "body": { "m": "SALDOS;AC-0001;38" },
+      "conclusion": "comparacion con experimento 53; clasificacion en docs/fr-0153-capturas.jsonl"
+    }
+  ]
+}
