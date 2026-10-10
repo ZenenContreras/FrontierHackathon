@@ -61,9 +61,13 @@ Un segmento vacío se detecta antes de interpretar el control. Solo se vio en me
 
 El campo extra se ignora. Solo se vio `extra: 1` junto a un `PING` que no valida el contenido del control.
 
+### Hipótesis
+
+El control numérico de cualquier comando distinto de `PING` es `(1 - 3R) mod 97`. `R` es el entero del mensaje sin el segmento de control: cada letra, sin distinguir mayúsculas, vale su posición `A=1` … `Z=26`; los dígitos se conservan; el resto de caracteres, incluidos `;` y `-`, se omite. Reproduce los controles válidos de `ALTA`, `DEPOSITO`, `TRANSFER`, `CONSULTA`, `SALDOS` y `ANULA`, y rechaza los inválidos de los ids 44, 82, 100, 102, 105, 106, 107, 108, 110 y 111. En `AC-` y `OP-` de cuatro dígitos coincide con `(17 - 3n)`, `(41 - 3n)` y `(75 - 3k) mod 97`. No se envió un mensaje nuevo al original para contrastarla fuera de esos registros.
+
 ### Desconocido
 
-Fórmula del control. Espacios, ceros a la izquierda y controles de más de dos dígitos en comandos que sí validan el control. Si todo comando desconocido con control válido usa `E301`. `m` con otros tipos. JSON con comentarios, BOM o cuerpo comprimido.
+Espacios, ceros a la izquierda y controles de más de dos dígitos en comandos que sí validan el control. Si todo comando desconocido con control válido usa `E301`: `SALDOS` con control válido sí; `NOPE;2` no se midió. `m` con otros tipos. JSON con comentarios, BOM o cuerpo comprimido.
 
 ## 3. Comandos
 
@@ -168,11 +172,21 @@ Otros códigos. Si `E507` con saldo parcial usa el mismo cuerpo: el ejemplo de l
 
 No hay evidencia de un cambio entre `ejemplos.jsonl` y los experimentos del 2026-10-10 para los mensajes repetidos. Coincidieron status y cuerpo en `PING;64`, `ALTA;Lucia;82`, `ALTA;Lucia;83`, `ALTA;Mateo;3`, `CONSULTA;AC-0001;14` tras el alta, `DEPOSITO;AC-0001;250000;86`, `TRANSFER` de 40000, 120000 y 100000, `SALDOS;AC-0001;38`, `ANULA;OP-0003;66` y su repetición, y `ALTA;Lucia;Gomez;11`.
 
-`ejemplos.jsonl` no trae hora. No se atribuye una causa a esa coincidencia.
+`ejemplos.jsonl` no trae hora. No se atribuye una causa a esa coincidencia. Ese párrafo no cubre la versión 2.
+
+### Confirmado en la versión 2
+
+| ID | Comportamiento | Evidencia | Confianza |
+| --- | --- | --- | --- |
+| V2-01 | `CONSULTA` devuelve `saldo` string con dos decimales, igual al entero de V1 dividido por 100, en los estados medidos: `"0.00"`, `"400.00"` y `"2100.00"`. | 149, 157, 162, 168, 175, 176 | confirmado en esos estados |
+| V2-02 | `TRANSFER;AC-0001;AC-0002;100000;12` responde 422 `E506` donde el id 75 respondió 200. `40000` sigue aceptándose y `120000` sigue en `E506`. | 148, 150, 167, 169, 170 | confirmado |
+| V2-03 | `E507` con saldo 0 y la anulación de un depósito coinciden con V1 en las secuencias medidas, salvo el formato de saldo ya citado. | 161, 162, 174, 175, 176 | confirmado en esas secuencias |
+
+No hay una tercera diferencia funcional en las capturas 128–176. No se midió si un `E506` consume id, ni el umbral entre 40000 y 100000, ni otros importes de `CONSULTA`.
 
 ### Hipótesis
 
-Ninguna diferencia temporal queda pendiente de explicación, porque no se observó una diferencia en los mensajes repetidos.
+Ninguna diferencia temporal queda pendiente de explicación entre los ejemplos de la mañana y los experimentos 1–127, porque no se observó una diferencia en los mensajes repetidos. La versión 2 sí tiene las dos diferencias de la tabla anterior. El tercer cambio anunciado sigue sin evidencia.
 
 ### Desconocido
 
@@ -192,7 +206,7 @@ Ninguna diferencia temporal queda pendiente de explicación, porque no se observ
 
 ### Hipótesis
 
-El límite de 100000 aceptado y 120000 rechazado puede no ser el umbral real. El reemplazo rechaza importes mayores que 100000 como supuesto, no como hecho medido.
+En V1, 100000 se aceptó y 120000 se rechazó. En V2, los ids 170 y 150/169 rechazan 100000 y 120000 con E506, y el id 148 acepta 40000. El umbral entre 40000 y 100000 no se midió. El reemplazo rechaza `importe >= 100000`. Eso reproduce lo observado; no demuestra que todo importe menor sea válido.
 
 Un control numérico de `ALTA`, `DEPOSITO` o `TRANSFER` que el reemplazo no sabe calcular se acepta, salvo los mensajes ya observados como inválidos. Eso no es una regla del original.
 
@@ -239,7 +253,7 @@ El paso 6 no llamó al original. Se compararon en local status y cuerpo de 126 l
 | Aislamiento entre dos tokens válidos del original | No verificado. Solo hay un token de participante y no se usaron credenciales ajenas. El enunciado lo exige. El reemplazo aísla por Bearer con tokens de prueba locales. |
 | `/__reset` de un token sobre el estado de otro en el original | No verificado por la misma razón. En el reemplazo, el reset de un token no borra el otro. |
 | Reinicio del proceso del original | Desconocido. En el reemplazo, un proceso nuevo no conserva el `Map` en memoria. Eso no es lo mismo que `POST /__reset`: el reset es una petición al proceso vivo y solo afecta al token autenticado. |
-| Importe de transferencia igual al saldo | Desconocido. No hay un mensaje con control ya observado para ese importe. No se afirma un umbral a partir de 100000 aceptado y 120000 rechazado. El reemplazo trata `importe > saldo` como insuficiente y `importe > 100000` como límite; lo segundo es un supuesto. |
+| Importe de transferencia igual al saldo | Desconocido. No hay un mensaje con control ya observado para ese importe. El reemplazo trata `importe > saldo` como insuficiente. El límite `importe >= 100000` reproduce V2 ids 148, 150, 169 y 170; no está medido el intervalo (40000, 100000). |
 | Transferencia con origen o destino inexistente | Desconocido. El reemplazo responde `E401` antes de mover saldos. No es una observación. |
 | Anular un depósito después de una transferencia que ya usó parte de ese saldo | Desconocido. No se midió si el original lo rechaza o deja un saldo negativo. El reemplazo resta el importe anulado; eso es un supuesto para ese caso. |
 | Saldo exacto de la cuenta destino después de anular `OP-0003` | No consultado. Sí se consultó el origen, que quedó en 210000. `ejemplos.jsonl` n=16 es compatible con que el destino no conservara los 100000, pero no demuestra el saldo exacto. |

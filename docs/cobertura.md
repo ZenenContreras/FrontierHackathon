@@ -109,7 +109,7 @@ El comparador de `tests/differential.test.ts` exige el status numérico y, para 
 | Reinicio del proceso | El original no se reinició | Un `createApp` nuevo no conserva el `Map` | `sequences.test.ts` | probado solo localmente | Distinto de `POST /__reset`. |
 | `X-Req` | 4, 7, 10 y las 87 líneas con valor | El original lo incrementa en `POST /msg` aceptado por la ruta | `differential.test.ts` comprueba que el reemplazo no lo envía | pendiente en el reemplazo | Fuera del contrato de status y cuerpo. El valor inicial observado fue 2. |
 | Importe igual al saldo | No hay mensaje con control conocido | No hay expectativa | ninguna | pendiente | |
-| Umbral exacto de transferencia | 100000 aceptado, 120000 rechazado | El reemplazo usa `> 100000` como supuesto | no se afirma en la matriz como hecho | pendiente | |
+| Umbral exacto de transferencia | V2 rechaza 100000 y 120000; acepta 40000 | El reemplazo usa `>= 100000` | `commands.test.ts`, `v2-captures.test.ts` | el umbral intermedio no está medido | No se afirma que 99999 sea válido. |
 | Transferencia con cuenta inexistente | No hay caso | El reemplazo responde `E401` antes de mover saldo | no hay prueba de equivalencia | pendiente | |
 | Anular depósito tras transferencia dependiente | No hay caso | El reemplazo resta el importe | no hay prueba de equivalencia | pendiente | Puede dejar saldo negativo; no está observado. |
 

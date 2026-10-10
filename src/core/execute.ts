@@ -30,6 +30,7 @@ const ARITY: Record<string, number> = {
   ANULA: 1,
 };
 
+// V2 rechazó 100000 y 120000, y aceptó 40000. El umbral intermedio no está medido.
 const TRANSFER_LIMIT = 100000;
 
 export function executeMessage(parsed: ParsedMessage, state: TokenState): CommandResult {

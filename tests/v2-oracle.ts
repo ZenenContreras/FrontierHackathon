@@ -27,6 +27,9 @@ function isSaldoNumber(response: unknown): response is { saldo: number } & Recor
 }
 
 export function replacementOracle(id: number, status: number, response: unknown): OracleExpectation {
+  if (id >= 128) {
+    throw new Error(`replacementOracle no traduce la captura V2 ${id}`);
+  }
   if (id === 75) {
     return {
       status: 422,

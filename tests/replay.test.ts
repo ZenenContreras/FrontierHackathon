@@ -170,4 +170,9 @@ test("solo reenvía pasos con vínculo de ledger y cuerpo igual a request", asyn
   assert.ok(expectedUnverifiable.includes("id 31 s6b sin archivo de secuencia; no se reconstruye la petición"));
   assert.equal(experiments.filter((row) => row.id <= 127 && !coveredSeq.has(row.seq)).length, 1);
   assert.equal(compared, 146);
+  const captureOnly = experiments.filter((row) => row.id >= 128 && !coveredSeq.has(row.seq));
+  assert.deepEqual(
+    captureOnly.map((row) => row.seq).filter((seq, index, all) => all.indexOf(seq) === index),
+    ["v2b", "v2c", "v2f", "v2g", "v2j", "v2k"],
+  );
 });

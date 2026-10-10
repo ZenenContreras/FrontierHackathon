@@ -271,6 +271,7 @@ test("el reemplazo coincide en status y cuerpo con los registros y no llama al o
   }
   assert.deepEqual(unpaired.filter((item) => item.includes("histórico sin pareja") || item.includes("sin registro")), []);
   assert.ok(unpaired.includes("s6b sin archivo de secuencia; no se reconstruye la petición"));
+  // Los ids V2 sin archivo de secuencia no se cubren aquí. tests/v2-captures.test.ts los compara literalmente.
   assert.deepEqual(bodyDiff, []);
   assert.deepEqual(ejemplosDiff, []);
   assert.deepEqual(infra, []);

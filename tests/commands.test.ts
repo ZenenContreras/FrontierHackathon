@@ -93,3 +93,49 @@ test("SALDOS con control valido sigue siendo comando desconocido con espacio fin
   assert.equal(result.status, 400);
   assert.deepEqual(bodyOf(result), { error: "E301", mensaje: "comando desconocido " });
 });
+
+test("un control numerico distinto del observado es E202 y no cambia el estado", () => {
+  const state = createInitialState();
+  const deposit = run(state, "DEPOSITO;AC-0001;100;1");
+  assert.equal(deposit.status, 400);
+  assert.deepEqual(bodyOf(deposit), { error: "E202", mensaje: "control inválido" });
+  const alta = run(state, "ALTA;Ana;66");
+  assert.equal(alta.status, 400);
+  assert.deepEqual(bodyOf(alta), { error: "E202", mensaje: "control inválido" });
+  assert.equal(run(state, "ALTA;Ana;16").status, 400);
+  const unknown = run(state, "NOPE;1");
+  assert.equal(unknown.status, 400);
+  assert.deepEqual(bodyOf(unknown), { error: "E202", mensaje: "control inválido" });
+  assert.deepEqual(bodyOf(run(state, "NOPE;2")), { error: "E301", mensaje: "comando desconocido " });
+  assert.equal(state.accounts.length, 0);
+  assert.equal(state.nextOperation, 1);
+  assert.deepEqual(bodyOf(run(state, "ALTA;Ana;50")), { cuentaId: "AC-0001" });
+});
+
+test("formatSaldo divide el entero almacenado entre 100; no es una medicion nueva de V2", () => {
+  const state = createInitialState();
+  run(state, "ALTA;Lucia;82");
+  const samples: Array<[string, string, string]> = [
+    ["0", "31", "0.00"],
+    ["1", "28", "0.01"],
+    ["99", "4", "0.99"],
+    ["100", "82", "1.00"],
+    ["700", "28", "7.00"],
+    ["40000", "66", "400.00"],
+    ["40700", "3", "407.00"],
+    ["210000", "0", "2100.00"],
+  ];
+  for (const [amount, control, saldo] of samples) {
+    const fresh = createInitialState();
+    run(fresh, "ALTA;Lucia;82");
+    if (amount !== "0") {
+      const deposited = run(fresh, `DEPOSITO;AC-0001;${amount};${control}`);
+      assert.equal(deposited.status, 200, amount);
+    }
+    assert.deepEqual(bodyOf(run(fresh, "CONSULTA;AC-0001;14")), {
+      cuenta_id: "AC-0001",
+      saldo,
+    });
+  }
+  assert.equal(state.accounts[0]?.balance, 0);
+});
