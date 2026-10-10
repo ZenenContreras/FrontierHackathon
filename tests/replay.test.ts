@@ -10,6 +10,7 @@ import type { AddressInfo } from "node:net";
 import path from "node:path";
 import test from "node:test";
 import { createApp } from "../src/app.js";
+import { replacementOracle } from "./v2-oracle.js";
 
 const TOKEN = "replay-token";
 
@@ -96,9 +97,11 @@ test("solo reenvía pasos con vínculo de ledger y cuerpo igual a request", asyn
       for (let index = 0; index < sequence.steps.length; index += 1) {
         const step = sequence.steps[index];
         const key = `${sequence.seq}:${index + 1}`;
-        const link = ledger[key];
+        const link = ledger[key]
+          ?? ledger[`fr0153-${sequence.seq}:${index + 1}`]
+          ?? ledger[`fr0153-${sequence.seq}-${index + 1}`];
         if (step === undefined || link === undefined || link.state !== "recorded") {
-          unverifiable.push(`${sequence.seq} paso ${index + 1} sin vínculo verificable en el ledger`);
+          failures.push(`${sequence.seq} paso ${index + 1} sin vínculo verificable en el ledger`);
           continue;
         }
         const row = byId.get(link.id);
@@ -136,9 +139,12 @@ test("solo reenvía pasos con vínculo de ledger y cuerpo igual a request", asyn
         const text = await response.text();
         const actual = text.length === 0 ? "" : JSON.parse(text) as unknown;
         compared += 1;
-        if (response.status !== row.status || JSON.stringify(actual) !== JSON.stringify(row.response)) {
+        const oracle = row.id >= 128
+          ? { status: row.status, response: row.response, note: "captura-v2" as const }
+          : replacementOracle(row.id, row.status, row.response);
+        if (response.status !== oracle.status || JSON.stringify(actual) !== JSON.stringify(oracle.response)) {
           failures.push(
-            `id ${row.id} ${sequence.seq} esperado ${row.status} ${JSON.stringify(row.response)} ` +
+            `id ${row.id} ${sequence.seq} nota=${oracle.note} esperado ${oracle.status} ${JSON.stringify(oracle.response)} ` +
               `obtuvo ${response.status} ${JSON.stringify(actual)}`,
           );
         }
@@ -156,9 +162,12 @@ test("solo reenvía pasos con vínculo de ledger y cuerpo igual a request", asyn
     }
   }
 
+  const expectedUnverifiable = experiments
+    .filter((row) => !coveredSeq.has(row.seq))
+    .map((row) => `id ${row.id} ${row.seq} sin archivo de secuencia; no se reconstruye la petición`);
   assert.deepEqual(failures, []);
-  assert.deepEqual(unverifiable, [
-    "id 31 s6b sin archivo de secuencia; no se reconstruye la petición",
-  ]);
-  assert.equal(compared, 126);
+  assert.deepEqual(unverifiable, expectedUnverifiable);
+  assert.ok(expectedUnverifiable.includes("id 31 s6b sin archivo de secuencia; no se reconstruye la petición"));
+  assert.equal(experiments.filter((row) => row.id <= 127 && !coveredSeq.has(row.seq)).length, 1);
+  assert.equal(compared, 146);
 });

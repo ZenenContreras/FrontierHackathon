@@ -6,6 +6,7 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import test from "node:test";
 import { createApp } from "../src/app.js";
+import { EJEMPLO_OVERRIDES } from "./v2-oracle.js";
 
 const ALICE = "seq-alice";
 const BOB = "seq-bob";
@@ -250,16 +251,9 @@ test("la secuencia de ejemplos.jsonl aplica el formato de consulta y el E506 de 
     .trim()
     .split("\n")
     .map((line) => JSON.parse(line) as { request: { m: string }; status: number; response: unknown });
-  const overrides = new Map<number, { status: number; json: unknown }>([
-    [5, { status: 200, json: { cuenta_id: "AC-0001", saldo: "0.00" } }],
-    [8, { status: 200, json: { cuenta_id: "AC-0002", saldo: "400.00" } }],
-    [10, { status: 422, json: { error: "E506", mensaje: "límite excedido" } }],
-    [11, { status: 200, json: { cuenta_id: "AC-0001", saldo: "2100.00" } }],
-    [13, { status: 404, json: { error: "E402", mensaje: "operación inexistente" } }],
-    [14, { status: 404, json: { error: "E402", mensaje: "operación inexistente" } }],
-    [18, { status: 200, json: { status: "recieved", operacionId: "OP-0003" } }],
-    [19, { status: 200, json: { cuenta_id: "AC-0002", saldo: "407.00" } }],
-  ]);
+  const overrides = new Map(
+    Object.entries(EJEMPLO_OVERRIDES).map(([n, item]) => [Number(n), { status: item.status, json: item.response }]),
+  );
   const { server, base } = await listen([ALICE]);
   try {
     assert.deepEqual(await call(base, ALICE, "POST", "/__reset"), { status: 200, json: { ok: true } });

@@ -10,6 +10,7 @@ import type { AddressInfo } from "node:net";
 import path from "node:path";
 import test from "node:test";
 import { createApp } from "../src/app.js";
+import { EJEMPLO_OVERRIDES, replacementOracle } from "./v2-oracle.js";
 
 const TOKEN = "differential-token";
 const INVALID = "invalid-token";
@@ -30,6 +31,7 @@ interface Experiment {
 interface Step {
   method: string;
   path: string;
+  hipotesis?: string;
   body?: unknown;
   rawBody?: boolean;
   contentType?: string;
@@ -100,18 +102,29 @@ function pairExperiments(rows: Experiment[], sequences: Map<string, Step[]>): { 
       unpaired.push(`${seq} sin archivo de secuencia; no se reconstruye la petición`);
       continue;
     }
-    if (steps === undefined || steps.length !== recorded.length) {
-      unpaired.push(`${seq} sin pareja de secuencia`);
-      continue;
-    }
-    for (let index = 0; index < steps.length; index += 1) {
-      const step = steps[index];
-      const row = recorded[index];
-      if (step === undefined || row === undefined || !sameRequest(step, row.request)) {
-        unpaired.push(`${seq}#${index + 1} el cuerpo no coincide con el registro`);
+    let cursor = 0;
+    for (const row of recorded) {
+      let found = -1;
+      for (let index = cursor; index < steps.length; index += 1) {
+        const step = steps[index];
+        if (step !== undefined && step.hipotesis === row.hipotesis && sameRequest(step, row.request)) {
+          found = index;
+          break;
+        }
+      }
+      if (found < 0) {
+        unpaired.push(`${seq} id ${row.id} sin paso equivalente; no se fabrica la petición`);
+        continue;
+      }
+      const step = steps[found];
+      if (step === undefined) {
         continue;
       }
       probes.push({ id: row.id, seq, auth: authFor(seq), step, expected: row });
+      cursor = found + 1;
+    }
+    for (let index = cursor; index < steps.length; index += 1) {
+      unpaired.push(`${seq} paso ${index + 1} sin registro`);
     }
   }
   return { probes, unpaired };
@@ -196,10 +209,13 @@ test("el reemplazo coincide en status y cuerpo con los registros y no llama al o
         if (actual.xReq !== null) {
           xReqOnReplacement += 1;
         }
-        if (probe.expected.status === null || !sameBody(actual.body, probe.expected.response) || actual.status !== probe.expected.status) {
+        const oracle = probe.id >= 128
+          ? { status: probe.expected.status, response: probe.expected.response, note: "captura-v2" as const }
+          : replacementOracle(probe.id, probe.expected.status ?? 0, probe.expected.response);
+        if (probe.expected.status === null || oracle.status === 0 || !sameBody(actual.body, oracle.response) || actual.status !== oracle.status) {
           bodyDiff.push(
-            `id ${probe.id} ${probe.seq} ${probe.step.method} ${probe.step.path} ` +
-              `esperado ${String(probe.expected.status)} ${JSON.stringify(probe.expected.response)} ` +
+            `id ${probe.id} ${probe.seq} nota=${oracle.note} ${probe.step.method} ${probe.step.path} ` +
+              `esperado ${String(oracle.status)} ${JSON.stringify(oracle.response)} ` +
               `obtuvo ${actual.status} ${JSON.stringify(actual.body)}`,
           );
         }
@@ -224,8 +240,13 @@ test("el reemplazo coincide en status y cuerpo con los registros y no llama al o
         path: "/msg",
         body: row.request,
       });
-      if (actual.status !== row.status || !sameBody(actual.body, row.response)) {
-        ejemplosDiff.push(`ejemplo ${index + 1} esperado ${row.status} obtuvo ${actual.status}`);
+      const override = EJEMPLO_OVERRIDES[index + 1];
+      const expectedStatus = override?.status ?? row.status;
+      const expectedBody = override?.response ?? row.response;
+      if (actual.status !== expectedStatus || !sameBody(actual.body, expectedBody)) {
+        ejemplosDiff.push(
+          `ejemplo ${index + 1} nota=${override?.note ?? "historico-v1"} esperado ${expectedStatus} obtuvo ${actual.status}`,
+        );
       }
       if (actual.xReq !== null) {
         xReqOnReplacement += 1;
@@ -241,13 +262,23 @@ test("el reemplazo coincide en status y cuerpo con los registros y no llama al o
   });
   const recordedXReq = rows.filter((row) => row.x_req !== null).length;
 
-  assert.deepEqual(unpaired, ["s6b sin archivo de secuencia; no se reconstruye la petición"]);
+  const historicalIds = new Set(rows.filter((row) => row.id <= 127).map((row) => row.id));
+  const pairedHistorical = probes.filter((probe) => probe.id <= 127).map((probe) => probe.id);
+  for (const id of historicalIds) {
+    if (id !== 31 && !pairedHistorical.includes(id)) {
+      unpaired.push(`id ${id} histórico sin pareja; no se omite`);
+    }
+  }
+  assert.deepEqual(unpaired.filter((item) => item.includes("histórico sin pareja") || item.includes("sin registro")), []);
+  assert.ok(unpaired.includes("s6b sin archivo de secuencia; no se reconstruye la petición"));
   assert.deepEqual(bodyDiff, []);
   assert.deepEqual(ejemplosDiff, []);
   assert.deepEqual(infra, []);
-  assert.equal(probes.length, 126);
-  assert.equal(rows.length, 127);
+  assert.equal(pairedHistorical.length, 126);
+  assert.equal(rows.length, 176);
+  assert.equal(new Set(rows.map((row) => row.id)).size, 176);
   assert.equal(ejemplos.length, 20);
-  assert.equal(recordedXReq, 87);
+  assert.equal(rows.filter((row) => row.id <= 127 && row.x_req !== null).length, 87);
+  assert.equal(recordedXReq, rows.filter((row) => row.x_req !== null).length);
   assert.equal(xReqOnReplacement, 0);
 });
