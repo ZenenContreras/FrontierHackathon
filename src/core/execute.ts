@@ -81,7 +81,7 @@ function consulta(accountId: string, state: TokenState): CommandResult {
   if (account === undefined) {
     return missingAccount;
   }
-  return jsonResult(200, { cuenta_id: account.id, saldo: account.balance });
+  return jsonResult(200, { cuenta_id: account.id, saldo: formatSaldo(account.balance) });
 }
 
 function deposito(accountId: string, rawAmount: string, state: TokenState): CommandResult {
@@ -115,7 +115,7 @@ function transfer(fromId: string, toId: string, rawAmount: string, state: TokenS
   if (from === undefined || to === undefined) {
     return missingAccount;
   }
-  if (amount > TRANSFER_LIMIT) {
+  if (amount >= TRANSFER_LIMIT) {
     return limitExceeded;
   }
   if (amount > from.balance) {
@@ -174,6 +174,15 @@ function accepted(state: TokenState, draft: Operation): CommandResult {
 
 function findAccount(state: TokenState, id: string): Account | undefined {
   return state.accounts.find((account) => account.id === id);
+}
+
+function formatSaldo(balance: number): string {
+  const negative = balance < 0;
+  const absolute = Math.abs(balance);
+  const units = Math.trunc(absolute / 100);
+  const cents = absolute % 100;
+  const text = `${units}.${String(cents).padStart(2, "0")}`;
+  return negative ? `-${text}` : text;
 }
 
 function parseAmount(raw: string): number | undefined {

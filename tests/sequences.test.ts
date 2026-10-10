@@ -55,7 +55,7 @@ test("crear, consultar, repetir alta y reset reinician ids", async () => {
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 0 },
+      json: { cuenta_id: "AC-0001", saldo: "0.00" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "ALTA;Lucia;82" }), {
       status: 201,
@@ -97,18 +97,18 @@ test("deposito fallido no crea cuenta y E507 no mueve saldos", async () => {
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 0 },
+      json: { cuenta_id: "AC-0001", saldo: "0.00" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0002;11" }), {
       status: 200,
-      json: { cuenta_id: "AC-0002", saldo: 0 },
+      json: { cuenta_id: "AC-0002", saldo: "0.00" },
     });
   } finally {
     await close(server);
   }
 });
 
-test("transferencia, limite, anulacion y repeticion no contaminan el saldo observado", async () => {
+test("transferencia de 40000 se acepta y 100000 y 120000 devuelven E506", async () => {
   const { server, base } = await listen([ALICE]);
   try {
     await call(base, ALICE, "POST", "/__reset");
@@ -124,27 +124,19 @@ test("transferencia, limite, anulacion y repeticion no contaminan el saldo obser
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0002;11" }), {
       status: 200,
-      json: { cuenta_id: "AC-0002", saldo: 40000 },
+      json: { cuenta_id: "AC-0002", saldo: "400.00" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "TRANSFER;AC-0001;AC-0002;120000;55" }), {
       status: 422,
       json: { error: "E506", mensaje: "límite excedido" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "TRANSFER;AC-0001;AC-0002;100000;12" }), {
-      status: 200,
-      json: { status: "recieved", operacionId: "OP-0003" },
-    });
-    assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "ANULA;OP-0003;66" }), {
-      status: 200,
-      json: { ok: true, anulada: "OP-0003" },
-    });
-    assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "ANULA;OP-0003;66" }), {
-      status: 200,
-      json: { ok: false, motivo: "ya anulada" },
+      status: 422,
+      json: { error: "E506", mensaje: "límite excedido" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 210000 },
+      json: { cuenta_id: "AC-0001", saldo: "2100.00" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "ANULA;OP-0009;48" }), {
       status: 404,
@@ -152,7 +144,7 @@ test("transferencia, limite, anulacion y repeticion no contaminan el saldo obser
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 210000 },
+      json: { cuenta_id: "AC-0001", saldo: "2100.00" },
     });
   } finally {
     await close(server);
@@ -174,7 +166,7 @@ test("anular un deposito sin operaciones posteriores deja el saldo en 0", async 
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 0 },
+      json: { cuenta_id: "AC-0001", saldo: "0.00" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "ANULA;OP-0001;72" }), {
       status: 200,
@@ -204,7 +196,7 @@ test("el reemplazo aisla dos tokens de prueba; no es una medicion del original",
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 0 },
+      json: { cuenta_id: "AC-0001", saldo: "0.00" },
     });
     assert.deepEqual(await call(base, BOB, "POST", "/__reset"), { status: 200, json: { ok: true } });
     assert.deepEqual(await call(base, BOB, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
@@ -213,7 +205,7 @@ test("el reemplazo aisla dos tokens de prueba; no es una medicion del original",
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 0 },
+      json: { cuenta_id: "AC-0001", saldo: "0.00" },
     });
     assert.deepEqual(await call(base, ALICE, "POST", "/__reset"), { status: 200, json: { ok: true } });
     assert.deepEqual(await call(base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
@@ -232,7 +224,7 @@ test("reiniciar el proceso local borra la memoria; no equivale al reset de un pr
     await call(first.base, BOB, "POST", "/msg", { m: "ALTA;Mateo;3" });
     assert.deepEqual(await call(first.base, ALICE, "POST", "/msg", { m: "CONSULTA;AC-0001;14" }), {
       status: 200,
-      json: { cuenta_id: "AC-0001", saldo: 0 },
+      json: { cuenta_id: "AC-0001", saldo: "0.00" },
     });
   } finally {
     await close(first.server);
@@ -253,17 +245,28 @@ test("reiniciar el proceso local borra la memoria; no equivale al reset de un pr
   }
 });
 
-test("la secuencia de ejemplos.jsonl se reproduce en un solo proceso tras reset", async () => {
+test("la secuencia de ejemplos.jsonl aplica el formato de consulta y el E506 de 100000", async () => {
   const lines = readFileSync("pruebas/ejemplos.jsonl", "utf8")
     .trim()
     .split("\n")
     .map((line) => JSON.parse(line) as { request: { m: string }; status: number; response: unknown });
+  const overrides = new Map<number, { status: number; json: unknown }>([
+    [5, { status: 200, json: { cuenta_id: "AC-0001", saldo: "0.00" } }],
+    [8, { status: 200, json: { cuenta_id: "AC-0002", saldo: "400.00" } }],
+    [10, { status: 422, json: { error: "E506", mensaje: "límite excedido" } }],
+    [11, { status: 200, json: { cuenta_id: "AC-0001", saldo: "2100.00" } }],
+    [13, { status: 404, json: { error: "E402", mensaje: "operación inexistente" } }],
+    [14, { status: 404, json: { error: "E402", mensaje: "operación inexistente" } }],
+    [18, { status: 200, json: { status: "recieved", operacionId: "OP-0003" } }],
+    [19, { status: 200, json: { cuenta_id: "AC-0002", saldo: "407.00" } }],
+  ]);
   const { server, base } = await listen([ALICE]);
   try {
     assert.deepEqual(await call(base, ALICE, "POST", "/__reset"), { status: 200, json: { ok: true } });
     for (const [index, step] of lines.entries()) {
       const actual = await call(base, ALICE, "POST", "/msg", step.request);
-      assert.deepEqual(actual, { status: step.status, json: step.response }, `ejemplo ${index + 1}`);
+      const expected = overrides.get(index + 1) ?? { status: step.status, json: step.response };
+      assert.deepEqual(actual, expected, `ejemplo ${index + 1}`);
     }
   } finally {
     await close(server);

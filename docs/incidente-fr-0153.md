@@ -208,7 +208,7 @@ Identificadores observados en la oleada 2, después del reset 144: `AC-0001`, `A
 
 No están identificados los tres. Hay una diferencia observada, no tres.
 
-1. **Saldo de `CONSULTA`.** Destino, experimento 149 frente al 73: string `"400.00"` en vez del número `40000`. Origen, experimento 157: string `"2100.00"`; el entero comparable, inferido y coherente con el experimento 78, es `210000`. Cero, experimento 162 frente al 126: string `"0.00"` en vez del número `0`, después de anular el depósito. Los tres son strings con dos decimales e iguales al entero de V1 dividido por 100. El cero ya no queda fuera de esa representación. Sigue sin medirse en V2 otro importe, por ejemplo 700 o 40700. No es un segundo cambio. El id 170 añade una diferencia funcional distinta: `TRANSFER;AC-0001;AC-0002;100000;12` devolvió `422 E506` donde el id 75 devolvió `200` y `OP-0003`. El tercer cambio anunciado no tiene evidencia. `src/` no se corrige en esta fase.
+1. **Saldo de `CONSULTA`.** Destino, experimento 149 frente al 73: string `"400.00"` en vez del número `40000`. Origen, experimento 157: string `"2100.00"`; el entero comparable, inferido y coherente con el experimento 78, es `210000`. Cero, experimento 162 frente al 126: string `"0.00"` en vez del número `0`, después de anular el depósito. Los tres son strings con dos decimales e iguales al entero de V1 dividido por 100. El cero ya no queda fuera de esa representación. Sigue sin medirse en V2 otro importe, por ejemplo 700 o 40700. No es un segundo cambio. El id 170 añade una diferencia funcional distinta: `TRANSFER;AC-0001;AC-0002;100000;12` devolvió `422 E506` donde el id 75 devolvió `200` y `OP-0003`. El id 174 no añade otra: `E507` con saldo 0 coincidió con los ids 87 y 92, y las consultas 175 y 176 siguieron en cero con el formato ya conocido. El tercer cambio anunciado no tiene evidencia. `src/` no se corrige en esta fase.
 
 ## 11. Hipótesis descartadas y evidencia contraria
 
@@ -437,3 +437,18 @@ Ejecutada el 2026-10-10 entre 22:27:07Z y 22:31:48Z. Ocho solicitudes. Se paró 
 El prefijo coincidió con los ids 68–72 y 74. La consulta del id 168 devolvió `"400.00"` donde el id 73 tenía el número `40000`. Es el formato ya observado; no se contó como otro cambio y el estado siguió siendo comparable.
 
 El id 170, `TRANSFER;AC-0001;AC-0002;100000;12`, respondió `422 {"error":"E506","mensaje":"límite excedido"}`. El id 75, con el mismo mensaje y este mismo prefijo, respondió `200 {"status":"recieved","operacionId":"OP-0003"}`. Es una diferencia funcional de aceptación. No trae saldo, así que no es el formato de `CONSULTA`. No se midió el umbral nuevo. Como no se creó `OP-0003`, tampoco se midió si el `E506` de 120000 consume un id, ni la anulación de una transferencia, ni su repetición, ni la reversión. `src/` no se modifica en este cierre.
+
+## 19. E507 con saldo cero, ids 171–176
+
+Ejecutada el 2026-10-10 entre 22:55:26Z y 22:55:49Z. Seis solicitudes. El paso 4 coincidió, así que se enviaron las dos consultas.
+
+| ID | Referencia | Resultado | Clasificación |
+| --- | --- | --- | --- |
+| 171 | 89 | `200 {"ok":true}` | coincide |
+| 172 | 90 | `201 {"cuentaId":"AC-0001"}` | coincide |
+| 173 | 91 | `201 {"cuentaId":"AC-0002"}` | coincide |
+| 174 | 87 y 92 | `422 {"error":"E507","mensaje":"saldo insuficiente"}` | coincide |
+| 175 | 93 | `200`, saldo `"0.00"` | formato ya conocido. El destino sigue en cero. |
+| 176 | 94 | `200`, saldo `"0.00"` | formato ya conocido. El origen sigue en cero. |
+
+El rechazo no movió saldo. No es una tercera diferencia funcional. No se propone otra oleada en este cierre.

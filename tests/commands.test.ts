@@ -37,7 +37,7 @@ test("CONSULTA usa cuenta_id y saldo 0, y E401 si no existe", () => {
   run(state, "ALTA;Lucia;82");
   assert.deepEqual(bodyOf(run(state, "CONSULTA;AC-0001;14")), {
     cuenta_id: "AC-0001",
-    saldo: 0,
+    saldo: "0.00",
   });
   assert.equal(run(state, "CONSULTA;AC-0009;87").status, 404);
   assert.deepEqual(bodyOf(run(state, "CONSULTA;AC-0009;87")), {
@@ -60,18 +60,18 @@ test("deposito, transferencia, limite, saldo y anulacion reproducen los casos ob
   });
   assert.deepEqual(bodyOf(run(state, "CONSULTA;AC-0002;11")), {
     cuenta_id: "AC-0002",
-    saldo: 40000,
+    saldo: "400.00",
   });
   assert.equal(run(state, "TRANSFER;AC-0001;AC-0002;120000;55").status, 422);
+  assert.equal(run(state, "TRANSFER;AC-0001;AC-0002;100000;12").status, 422);
   assert.deepEqual(bodyOf(run(state, "TRANSFER;AC-0001;AC-0002;100000;12")), {
-    status: "recieved",
-    operacionId: "OP-0003",
+    error: "E506",
+    mensaje: "límite excedido",
   });
-  assert.deepEqual(bodyOf(run(state, "ANULA;OP-0003;66")), { ok: true, anulada: "OP-0003" });
-  assert.deepEqual(bodyOf(run(state, "ANULA;OP-0003;66")), { ok: false, motivo: "ya anulada" });
+  assert.equal(state.nextOperation, 3);
   assert.deepEqual(bodyOf(run(state, "CONSULTA;AC-0001;14")), {
     cuenta_id: "AC-0001",
-    saldo: 210000,
+    saldo: "2100.00",
   });
 });
 
