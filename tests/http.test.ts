@@ -6,6 +6,8 @@ import test from "node:test";
 import { createApp } from "../src/app.js";
 import { createStateStore } from "../src/state/store.js";
 
+const TOKEN = "alpha-token";
+
 async function listen(app: ReturnType<typeof createApp>): Promise<Server> {
   const server = app.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -26,14 +28,29 @@ async function close(server: Server): Promise<void> {
   });
 }
 
-test("GET /health responde 200 sin cuerpo", async () => {
-  const server = await listen(createApp());
+function app() {
+  return createApp({ tokens: [TOKEN, "beta-token"] });
+}
+
+test("GET /health con token responde 200 y ok", async () => {
+  const server = await listen(app());
+  try {
+    const response = await fetch(`${baseUrl(server)}/health`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true });
+  } finally {
+    await close(server);
+  }
+});
+
+test("GET /health sin token responde 401", async () => {
+  const server = await listen(app());
   try {
     const response = await fetch(`${baseUrl(server)}/health`);
-    const text = await response.text();
-
-    assert.equal(response.status, 200);
-    assert.equal(text, "");
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "E001", mensaje: "no autorizado" });
   } finally {
     await close(server);
   }
@@ -41,94 +58,104 @@ test("GET /health responde 200 sin cuerpo", async () => {
 
 test("POST /__reset reinicia solo el token indicado", async () => {
   const store = createStateStore();
-  const beforeA = store.get("alpha");
-  const beforeB = store.get("beta");
-  const server = await listen(createApp({ store }));
+  const beforeA = store.get(TOKEN);
+  const beforeB = store.get("beta-token");
+  const server = await listen(createApp({ store, tokens: [TOKEN, "beta-token"] }));
 
   try {
     const response = await fetch(`${baseUrl(server)}/__reset`, {
       method: "POST",
-      headers: { Authorization: "Bearer alpha" },
+      headers: { Authorization: `Bearer ${TOKEN}` },
     });
 
     assert.equal(response.status, 200);
-    assert.equal(await response.text(), "");
-    assert.notEqual(store.get("alpha"), beforeA);
-    assert.equal(store.get("beta"), beforeB);
+    assert.deepEqual(await response.json(), { ok: true });
+    assert.notEqual(store.get(TOKEN), beforeA);
+    assert.equal(store.get("beta-token"), beforeB);
   } finally {
     await close(server);
   }
 });
 
-test("POST /__reset sin token no borra el estado de otro token", async () => {
+test("POST /__reset sin token no borra el estado", async () => {
   const store = createStateStore();
-  const named = store.get("alpha");
-  const anonymous = store.get("");
-  const server = await listen(createApp({ store }));
+  const named = store.get(TOKEN);
+  const server = await listen(createApp({ store, tokens: [TOKEN] }));
 
   try {
     const response = await fetch(`${baseUrl(server)}/__reset`, { method: "POST" });
-
-    assert.equal(response.status, 200);
-    assert.equal(store.get("alpha"), named);
-    assert.notEqual(store.get(""), anonymous);
+    assert.equal(response.status, 401);
+    assert.equal(store.get(TOKEN), named);
   } finally {
     await close(server);
   }
 });
 
-test("POST /msg está cableado y no muta el estado", async () => {
+test("POST /msg PING responde pong y no crea cuentas", async () => {
   const store = createStateStore();
-  const before = store.get("alpha");
-  const server = await listen(createApp({ store }));
+  const before = store.get(TOKEN);
+  const server = await listen(createApp({ store, tokens: [TOKEN] }));
 
   try {
     const response = await fetch(`${baseUrl(server)}/msg`, {
       method: "POST",
       headers: {
-        Authorization: "Bearer alpha",
+        Authorization: `Bearer ${TOKEN}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ m: "PING;64" }),
     });
 
-    assert.equal(response.status, 501);
-    assert.deepEqual(await response.json(), { provisional: true, route: "POST /msg" });
-    assert.equal(store.get("alpha"), before);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { pong: true });
+    assert.equal(store.get(TOKEN), before);
+    assert.equal(store.get(TOKEN).accounts.length, 0);
   } finally {
     await close(server);
   }
 });
 
-test("una ruta desconocida no usa el HTML por defecto de Express", async () => {
-  const server = await listen(createApp());
+test("una ruta desconocida responde E404 antes de la autenticacion", async () => {
+  const server = await listen(app());
   try {
     const response = await fetch(`${baseUrl(server)}/no-existe`, { method: "PUT" });
-
     assert.equal(response.status, 404);
-    assert.deepEqual(await response.json(), {
-      provisional: true,
-      method: "PUT",
-      path: "/no-existe",
-    });
+    assert.deepEqual(await response.json(), { error: "E404", mensaje: "ruta desconocida" });
   } finally {
     await close(server);
   }
 });
 
-test("un JSON inválido no devuelve una página HTML", async () => {
-  const server = await listen(createApp());
+test("JSON invalido sin token responde 401", async () => {
+  const server = await listen(app());
   try {
     const response = await fetch(`${baseUrl(server)}/msg`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{",
     });
-    const text = await response.text();
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "E001", mensaje: "no autorizado" });
+  } finally {
+    await close(server);
+  }
+});
 
+test("JSON invalido con token responde E100", async () => {
+  const server = await listen(app());
+  try {
+    const response = await fetch(`${baseUrl(server)}/msg`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: "{",
+    });
+    const text = await response.text();
     assert.equal(response.status, 400);
     assert.equal(text.includes("<html"), false);
-    assert.deepEqual(JSON.parse(text), { provisional: true, reason: "invalid-json" });
+    assert.deepEqual(JSON.parse(text), { error: "E100", mensaje: "json inválido" });
   } finally {
     await close(server);
   }

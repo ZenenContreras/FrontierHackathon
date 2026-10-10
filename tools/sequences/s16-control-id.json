@@ -1,0 +1,29 @@
+{
+  "seq": "s16",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-00010;84 trata el sufijo como entero 10, igual que AC-0010",
+      "body": { "m": "CONSULTA;AC-00010;84" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-10;84 tambien usa el entero 10 y no la cadena completa",
+      "body": { "m": "CONSULTA;AC-10;84" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-0010;85 es un control vecino invalido si 84 es el correcto",
+      "body": { "m": "CONSULTA;AC-0010;85" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "SALDOS;AC-10;11 usa el entero 10 con el mismo peso -3",
+      "body": { "m": "SALDOS;AC-10;11" }
+    }
+  ]
+}

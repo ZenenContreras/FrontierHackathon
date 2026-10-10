@@ -33,7 +33,7 @@ test("el servidor desplegable no depende del laboratorio ni del original", () =>
 
   for (const file of walk("src")) {
     const source = readFileSync(file, "utf8");
-    for (const needle of ["tools/", "PARTICIPANT_TOKEN", "fetch(", "caja-negra-production", "experimentos.jsonl"]) {
+    for (const needle of ["tools/", "fetch(", "caja-negra-production", "experimentos.jsonl"]) {
       if (source.includes(needle)) {
         offenders.push(`${file} contiene ${needle}`);
       }

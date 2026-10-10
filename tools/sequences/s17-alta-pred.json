@@ -1,0 +1,39 @@
+{
+  "seq": "s17",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset limpia el token antes de probar la formula de ALTA"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ALTA;Ana;66 es el control predicho por suma de mayusculas con peso 75; si acierta, crea cuenta",
+      "body": { "m": "ALTA;Ana;66" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ALTA;Ana;16 es el control predicho con la suma en la grafia original; si 66 fallo, este puede crear la cuenta",
+      "body": { "m": "ALTA;Ana;16" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ALTA;;82 tiene un segmento vacio y deberia ser E104 si la regla de PING es general",
+      "body": { "m": "ALTA;;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "alta;Lucia;82 en minusculas crea cuenta si el comando ignora mayusculas y el control 82 sigue valiendo",
+      "body": { "m": "alta;Lucia;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset borra cualquier cuenta creada en s17"
+    }
+  ]
+}

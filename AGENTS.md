@@ -141,7 +141,7 @@ Esta estructura es la del repositorio tras el laboratorio. Los agentes deben ins
 
 El diagrama de arquitectura está en `docs/diagramadearquitectura.md`. `docs/design.md` todavía enlaza `docs/architecture.md`, que no existe en disco. No se ha renombrado ese archivo.
 
-`src/` contiene solo la infraestructura HTTP, el almacén en memoria y un despacho provisional de `POST /msg`. No implementa comandos ni llama al original. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` contiene experimentos reales del 2026-10-10. `docs/service-spec.md` es la especificación inicial del original, no el diseño del reemplazo.
+`src/` implementa el transporte, la autenticación observada, el parser y los comandos con evidencia. No llama al original. La fórmula general del control de `ALTA`, `DEPOSITO` y `TRANSFER` sigue abierta. `tools/` es el laboratorio y no lo importa el proceso desplegable. `experimentos.jsonl` contiene experimentos reales. `docs/service-spec.md` describe el original, no el diseño del reemplazo.
 
 ### Responsabilidades de los archivos existentes
 

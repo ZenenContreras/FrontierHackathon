@@ -143,12 +143,11 @@ El servidor base está en `src/` y se arranca con `src/server.ts`. No llama al s
 El estado vive en memoria, aislado por token, y se pierde al reiniciar el proceso. Hay que
 desplegar una sola instancia.
 
-Las respuestas actuales no reproducen el contrato confirmado del original. `GET /health` devuelve
-200 con cuerpo vacío para cumplir el requisito de “listo”; el cuerpo real no se ha medido.
-`POST /__reset` reinicia el estado del token y responde 200 con cuerpo vacío: ese status y ese
-cuerpo son un supuesto. `POST /msg` responde 501 con `{"provisional":true,"route":"POST /msg"}`
-porque los comandos todavía no están caracterizados. Las rutas o métodos no registrados responden
-404 con un JSON provisional, no con el HTML por defecto de Express.
+`GET /health` con Bearer válido responde 200 y `{"ok":true}`. `POST /__reset` responde 200 y
+`{"ok":true}` y borra el estado de ese token. `POST /msg` ejecuta los comandos con evidencia.
+Sin token, o con un token distinto de `PARTICIPANT_TOKEN`, esas rutas responden 401. Una ruta o
+método no registrado responde 404 y `E404`. La fórmula general del control de `ALTA`, `DEPOSITO`
+y `TRANSFER` todavía no está confirmada.
 
 ```bash
 npm install
@@ -160,8 +159,9 @@ npm start
 En desarrollo, `npm run dev` recompila al guardar. El puerto sale de `PORT` y, si no existe, es
 `3000`. El proceso escucha en `0.0.0.0`.
 
-No hace falta un archivo `.env` para arrancar. `.env.example` documenta `PORT` y las variables que
-solo podrán usar las herramientas de laboratorio. Esas herramientas no forman parte de este proceso.
+Para distinguir un Bearer válido hace falta `PARTICIPANT_TOKEN` en el entorno. Sin esa variable,
+`/health`, `/__reset` y `/msg` responden 401. El laboratorio también la usa y no forma parte del
+proceso desplegable.
 
 ## Laboratorio
 

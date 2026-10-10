@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createStateStore } from "../src/state/store.js";
+import { createInitialState, createStateStore } from "../src/state/store.js";
 
 test("el estado de un token se reutiliza hasta el reset", () => {
   const store = createStateStore();
@@ -9,7 +9,7 @@ test("el estado de un token se reutiliza hasta el reset", () => {
   const second = store.get("token-a");
 
   assert.equal(first, second);
-  assert.deepEqual(first, {});
+  assert.deepEqual(first, createInitialState());
 });
 
 test("el reset reemplaza solo el estado de ese token", () => {
@@ -21,7 +21,7 @@ test("el reset reemplaza solo el estado de ese token", () => {
 
   assert.notEqual(store.get("token-a"), tokenA);
   assert.equal(store.get("token-b"), tokenB);
-  assert.deepEqual(store.get("token-a"), {});
+  assert.deepEqual(store.get("token-a"), createInitialState());
 });
 
 test("dos almacenes no comparten estado", () => {

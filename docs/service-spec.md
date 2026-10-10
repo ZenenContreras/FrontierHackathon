@@ -48,6 +48,10 @@ Esquema distinto de `Bearer`, `Bearer` vacío, espacios alrededor del token y un
 | INT-07 | `NOPE;1` y `ALTA;Lucia;83` responden 400 y `{"error":"E202","mensaje":"control inválido"}`. | 44, 82 | confirmado |
 | INT-08 | `PING;64;1` y `ALTA;Lucia;Gomez;11` responden 400 y `{"error":"E302","mensaje":"aridad inválida"}`. | 49, 83 | confirmado |
 | INT-09 | En `POST /msg`, el control mal formado se evalúa antes que el comando desconocido y antes que la aridad. El control numérico inválido se evalúa antes que el comando desconocido. | 44, 45, 54 | confirmado |
+| INT-10 | `m` cadena vacía responde `E103`, no `E104`. Un segmento vacío después de un `;` responde `E104`, también en `ALTA;;82`. | 35, 42, 51, 112 | confirmado |
+| INT-11 | `CONSULTA;AC-` más cuatro dígitos usa control `(17 - 3n) mod 97`, donde `n` es el entero de esos dígitos. Vale para 1, 2, 3, 9 y 10. El vecino numérico es `E202`. | 61, 99, 100, 104, 107 | confirmado |
+| INT-12 | `SALDOS;AC-` de cuatro dígitos usa `(41 - 3n) mod 97`. `ANULA;OP-` de cuatro dígitos usa `(75 - 3k) mod 97`. | 53, 101, 76, 103, 125 | confirmado |
+| INT-13 | `AC-00010` y `AC-10` no usan el control del entero 10. `ALTA;Ana;66` y `ALTA;Ana;16` no son el control válido. `DEPOSITO;AC-0009;1;15` tampoco. | 102, 105, 106, 110, 111 | confirmado |
 
 ### Hipótesis
 
@@ -85,18 +89,20 @@ Los ejemplos de la mañana muestran `PING`, `ALTA`, `CONSULTA`, `DEPOSITO`, `TRA
 | CMD-14 | `SALDOS;AC-0001;38`, `saldos;AC-0001;38` y `SaldoS;AC-0001;38` responden 400 y `{"error":"E301","mensaje":"comando desconocido "}`. El espacio final forma parte del texto. | 53, 58, 59 | confirmado |
 | CMD-15 | `DEPOSITO;AC-0001;250000;86` sin cuenta responde 404 y `E401`. El alta siguiente sigue en `AC-0001`. | 84, 85 | confirmado |
 | CMD-16 | `TRANSFER;AC-0002;AC-0001;50000;23` con ambas cuentas en saldo 0 responde 422 y `{"error":"E507","mensaje":"saldo insuficiente"}`. Las dos consultas posteriores siguen en saldo 0. | 87, 92, 93, 94 | confirmado |
+| CMD-17 | `alta`, `deposito`, `transfer` y `anula` en minúsculas se aceptan con el mismo control que la forma en mayúsculas. | 113, 118, 119, 125 | confirmado |
+| CMD-18 | `anula;OP-0001;72` sobre un depósito de 250000 responde `ok true` y la consulta posterior queda en saldo 0. Anular un depósito revierte ese importe. | 124, 125, 126 | confirmado |
 
 ### Hipótesis
 
 `PING` no valida el contenido del control y los demás comandos sí. No se probó otro comando con control `5X` que además tuviera aridad correcta y control numérico válido.
 
-Los comandos probados ignoran mayúsculas: `ping`, `consulta`, `saldos` y `SaldoS`. No se probó el resto.
+Los seis comandos observados ignoran mayúsculas en el nombre del comando. No se probó un nombre de persona en otra grafía: `Lucia` y `lucia` pueden tener controles distintos.
 
 `SALDOS` no está reconocido en ese mensaje. Eso no demuestra que no exista con otra aridad o que el servicio no lo añada después.
 
 El límite de transferencia está por encima de 100000 y no admite 120000 en el caso probado. El umbral exacto no se midió.
 
-La anulación revierte una transferencia. No se anuló un depósito.
+La anulación revierte la transferencia probada y el depósito probado. No se anuló una transferencia y un depósito encadenados de forma que el saldo quedara negativo.
 
 ### Desconocido
 
@@ -148,7 +154,7 @@ Estado compartido entre dos tokens válidos. Si `X-Req` se reinicia en algún mo
 
 ### Hipótesis
 
-`E301` siempre lleva espacio final. Solo se vio en variantes de un mismo mensaje.
+`E301` siempre lleva espacio final. Se vio en `SALDOS;AC-0001;38` y `SALDOS;AC-0002;35`, no en otro nombre de comando.
 
 `E506` no crea operación. Se infiere porque el id siguiente fue `OP-0003`, no porque se consultara una lista de operaciones.
 
@@ -182,11 +188,13 @@ Ninguna diferencia temporal queda pendiente de explicación, porque no se observ
 | RIE-02 | El error de comando desconocido observado incluye un espacio final. Hay que reproducirlo, no corregirlo. | 53, 58, 59 | confirmado |
 | RIE-03 | El depósito aceptado dice `recieved`, no `received`. `ALTA` devuelve `cuentaId` y `CONSULTA` devuelve `cuenta_id`. | 62, 63, 71 | confirmado |
 | RIE-04 | Se puede repetir el mismo nombre de alta. | 65 | confirmado |
-| RIE-05 | El reemplazo actual no reproduce estos resultados. Sigue con respuestas provisionales. Esta especificación no cambia ese servidor. | implementación de `src/` anterior a estos experimentos | confirmado |
+| RIE-05 | No hay fórmula general confirmada para el control de `ALTA`, `DEPOSITO` y `TRANSFER`. Los experimentos 102, 110 y 111 descartaron dos predicciones. | 102, 110, 111 | confirmado |
 
 ### Hipótesis
 
-El límite de 100000 aceptado y 120000 rechazado puede no ser el umbral real. Cerrar el límite exige controles válidos todavía desconocidos.
+El límite de 100000 aceptado y 120000 rechazado puede no ser el umbral real. El reemplazo rechaza importes mayores que 100000 como supuesto, no como hecho medido.
+
+Un control numérico de `ALTA`, `DEPOSITO` o `TRANSFER` que el reemplazo no sabe calcular se acepta, salvo los mensajes ya observados como inválidos. Eso no es una regla del original.
 
 ### Desconocido
 

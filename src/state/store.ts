@@ -1,4 +1,25 @@
-export type TokenState = Record<string, never>;
+export interface Account {
+  id: string;
+  name: string;
+  balance: number;
+}
+
+export interface Operation {
+  id: string;
+  kind: "deposito" | "transfer";
+  amount: number;
+  accountId: string;
+  fromId: string;
+  toId: string;
+  anulada: boolean;
+}
+
+export interface TokenState {
+  accounts: Account[];
+  operations: Operation[];
+  nextAccount: number;
+  nextOperation: number;
+}
 
 export interface StateStore {
   get(stateKey: string): TokenState;
@@ -6,7 +27,12 @@ export interface StateStore {
 }
 
 export function createInitialState(): TokenState {
-  return {};
+  return {
+    accounts: [],
+    operations: [],
+    nextAccount: 1,
+    nextOperation: 1,
+  };
 }
 
 export function createStateStore(): StateStore {
@@ -26,4 +52,12 @@ export function createStateStore(): StateStore {
       states.set(stateKey, createInitialState());
     },
   };
+}
+
+export function formatAccountId(n: number): string {
+  return `AC-${String(n).padStart(4, "0")}`;
+}
+
+export function formatOperationId(n: number): string {
+  return `OP-${String(n).padStart(4, "0")}`;
 }

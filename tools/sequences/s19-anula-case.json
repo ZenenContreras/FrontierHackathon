@@ -1,0 +1,39 @@
+{
+  "seq": "s19",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset limpia el token antes de probar anula en minusculas"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ALTA;Lucia;82 crea la cuenta del deposito",
+      "body": { "m": "ALTA;Lucia;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "DEPOSITO;AC-0001;250000;86 crea OP-0001",
+      "body": { "m": "DEPOSITO;AC-0001;250000;86" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "anula;OP-0001;72 en minusculas anula el deposito si el comando ignora mayusculas y el control 72 sigue valiendo",
+      "body": { "m": "anula;OP-0001;72" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-0001;14 despues de anular el deposito muestra si el saldo volvio a 0",
+      "body": { "m": "CONSULTA;AC-0001;14" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset borra las cuentas de s19"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "seq": "s18",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset limpia el token antes de probar mayusculas en deposito y transferencia"
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ALTA;Lucia;82 crea AC-0001",
+      "body": { "m": "ALTA;Lucia;82" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ALTA;Mateo;3 crea AC-0002",
+      "body": { "m": "ALTA;Mateo;3" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "deposito;AC-0001;250000;86 en minusculas acredita si el comando ignora mayusculas y el control 86 sigue valiendo",
+      "body": { "m": "deposito;AC-0001;250000;86" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "transfer;AC-0001;AC-0002;40000;86 en minusculas mueve 40000 si el comando ignora mayusculas",
+      "body": { "m": "transfer;AC-0001;AC-0002;40000;86" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "anula;OP-0002;? no se envia; CONSULTA;AC-0002;11 muestra si la transferencia en minusculas acredito",
+      "body": { "m": "CONSULTA;AC-0002;11" }
+    },
+    {
+      "method": "POST",
+      "path": "/__reset",
+      "hipotesis": "POST /__reset borra las cuentas de s18"
+    }
+  ]
+}

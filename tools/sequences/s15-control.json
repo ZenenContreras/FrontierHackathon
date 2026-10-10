@@ -1,0 +1,41 @@
+{
+  "seq": "s15",
+  "steps": [
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-0003;8 es el control predicho por (17-3*n) mod 97; si acierta, la cuenta inexistente responde E401",
+      "body": { "m": "CONSULTA;AC-0003;8" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-0003;9 es el control vecino y deberia ser E202 si 8 es el unico valido",
+      "body": { "m": "CONSULTA;AC-0003;9" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "SALDOS;AC-0002;35 usa el mismo peso -3 del numero de cuenta; si acierta, E301 con espacio final",
+      "body": { "m": "SALDOS;AC-0002;35" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "DEPOSITO;AC-0009;1;15 predice control con peso -3 en cuenta y 63 en importe; si acierta, E401 y no crea cuenta",
+      "body": { "m": "DEPOSITO;AC-0009;1;15" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "ANULA;OP-0001;72 predice peso -3 en el numero de operacion; si acierta, E402",
+      "body": { "m": "ANULA;OP-0001;72" }
+    },
+    {
+      "method": "POST",
+      "path": "/msg",
+      "hipotesis": "CONSULTA;AC-0010;84 usa el entero 10 y no solo el ultimo digito; si acierta, E401",
+      "body": { "m": "CONSULTA;AC-0010;84" }
+    }
+  ]
+}
