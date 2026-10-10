@@ -112,9 +112,8 @@ El laboratorio se utiliza durante la investigación para formular hipótesis, en
 
 **Restricción importante:** el servicio desplegado no debe llamar, importar ni depender del servicio original ni de otra implementación de reemplazo. La comunicación con el original se limita a las herramientas de experimentación ejecutadas por separado.
 
-## 5. Límites y aspectos por confirmar
+## 5. Límites
 
-- El diagrama describe el flujo previsto; no demuestra que el comportamiento ya esté implementado.
 - Los códigos HTTP, mensajes de error, orden de validación y reglas de cada comando deben confirmarse con experimentos.
 - Los errores automáticos de Express y del parseo JSON deben revisarse para evitar respuestas distintas de las del original.
 - El estado en memoria se pierde al reiniciar el proceso y no se comparte entre instancias.
