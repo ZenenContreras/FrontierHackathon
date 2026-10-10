@@ -106,7 +106,7 @@ La anulación revierte la transferencia probada y el depósito probado. No se an
 
 ### Desconocido
 
-Fórmula del control. Importes 0, negativos, con ceros a la izquierda o mayores que los probados. Transferencia a la misma cuenta, cuenta origen inexistente y destino inexistente. Anulación de un depósito. Identificadores después de `AC-0002` y `OP-0003` sin reset. Si un nombre distinto de `Lucia` también puede duplicarse: solo se repitió ese nombre.
+Fórmula del control. Importes 0, negativos, con ceros a la izquierda o mayores que los probados. Importe de transferencia igual al saldo. Transferencia a la misma cuenta, cuenta origen inexistente y destino inexistente. Anulación de un depósito después de una transferencia que ya gastó parte de ese saldo. Identificadores después de `AC-0002` y `OP-0004` sin reset: `OP-0004` solo aparece en `ejemplos.jsonl` n=18. Si un nombre distinto de `Lucia` también puede duplicarse: solo se repitió ese nombre.
 
 ## 4. Memoria entre requests
 
@@ -124,11 +124,11 @@ Fórmula del control. Importes 0, negativos, con ceros a la izquierda o mayores 
 
 `X-Req` cuenta solo `POST /msg` aceptados por la ruta, no el resultado funcional. Encaja con los saltos observados, pero no se probaron todas las rutas.
 
-El estado está aislado por token. El token inválido no llega a leer cuentas porque falla antes con `E001`.
+El enunciado del reto afirma que cada token tiene estado independiente. No hay experimento con dos Bearer válidos, así que el aislamiento entre tokens válidos no está medido en el original. El token inválido no llega a leer cuentas porque falla antes con `E001`.
 
 ### Desconocido
 
-Estado compartido entre dos tokens válidos. Si `X-Req` se reinicia en algún momento del día. Persistencia después de reiniciar el proceso del original. Efecto de un reset con cuerpo cuando hay cuentas.
+Estado compartido o aislado entre dos tokens válidos. Si `X-Req` se reinicia en algún momento del día. Persistencia después de reiniciar el proceso del original. Efecto de un reset con cuerpo cuando hay cuentas. Si `E507` consume un identificador de operación.
 
 ## 5. Errores
 
@@ -198,4 +198,51 @@ Un control numérico de `ALTA`, `DEPOSITO` o `TRANSFER` que el reemplazo no sabe
 
 ### Desconocido
 
-Fórmula del control. Aislamiento entre tokens válidos. Comandos no vistos. Umbral exacto de transferencia. Efectos de anular un depósito. Comportamiento si el original cambia después del 2026-10-10.
+Fórmula del control. Aislamiento entre dos tokens válidos. Comandos no vistos. Umbral exacto de transferencia. Anulación cuando la operación dependiente ya movió parte del saldo. Comportamiento si el original cambia después del 2026-10-10.
+
+## 8. Estado y secuencias
+
+Esta sección no añade solicitudes al original. El reloj local ya pasaba de las 20:00 UTC del 2026-10-10, cuando los tokens de participante dejan de valer contra el original. No se gastó cuota en el paso 5.
+
+### Qué se probó con evidencia ya registrada
+
+| ID | Qué se probó | Qué se observó | Evidencia | Confianza |
+| --- | --- | --- | --- | --- |
+| SEQ-01 | Alta y consulta en el mismo token. | `ALTA;Lucia;82` crea `AC-0001`. La consulta inmediata devuelve `cuenta_id` y saldo 0. | 62, 63 | confirmado |
+| SEQ-02 | Varias altas. | La segunda `ALTA;Lucia;82` crea `AC-0002`. `ALTA;Mateo;3` también crea `AC-0002` si es la segunda alta. El nombre repetido no se rechaza. | 65, 69, 70 | confirmado |
+| SEQ-03 | Reset y contadores de cuentas y operaciones. | Tras `POST /__reset`, `AC-0001` ya no existe. La siguiente alta vuelve a `AC-0001`. Las operaciones aceptadas vuelven a `OP-0001`. | 66, 67, 69, 71 | confirmado |
+| SEQ-04 | Depósito, transferencia y consulta. | El depósito de 250000 es `OP-0001`. La transferencia de 40000 es `OP-0002` y `AC-0002` queda en 40000. | 71, 72, 73 | confirmado |
+| SEQ-05 | Segundo depósito en otra cuenta, solo en la secuencia de la mañana. | Tras la transferencia de 40000 y un depósito de 700 en `AC-0002`, la consulta devuelve 40700 y `OP-0004`. No se repitió en `experimentos.jsonl`. | `ejemplos.jsonl` n=18, n=19 | probable |
+| SEQ-06 | Depósito en cuenta inexistente. | 404 `E401`. La alta siguiente sigue en `AC-0001`. | 84, 85 | confirmado |
+| SEQ-07 | Transferencia mayor que el saldo 0. | 422 `E507`. Las dos consultas posteriores siguen en 0. | 92, 93, 94 | confirmado |
+| SEQ-08 | Transferencia de 120000 y después una de 100000. | 422 `E506` y la aceptada recibe `OP-0003`, no un id posterior. El rechazo no ocupó ese id. | 74, 75 | confirmado |
+| SEQ-09 | Importe superior al saldo de 40000 en la secuencia de la mañana. | `TRANSFER;AC-0002;AC-0001;50000;23` respondió `E507`. El estado previo de esa línea no se volvió a medir. | `ejemplos.jsonl` n=16; experimentos 87, 92 | confirmado el texto con saldo 0; probable el mismo texto con saldo 40000 |
+| SEQ-10 | Anular una transferencia y repetir la anulación. | La primera devuelve `ok true`. La segunda, `ok false` y `ya anulada`. `AC-0001` queda en 210000. | 76, 77, 78 | confirmado |
+| SEQ-11 | Anular un depósito sin operaciones posteriores. | `anula;OP-0001;72` devuelve `ok true` y la consulta queda en 0. | 124, 125, 126 | confirmado |
+| SEQ-12 | Anular una operación inexistente. | 404 `E402`. No impide el alta siguiente. | 81, 85 | confirmado |
+| SEQ-13 | Error intercalado. | `E202`, `E401`, `E506` y `E507` no impiden la operación válida siguiente en las secuencias citadas. | 82, 85, 74, 75, 92, 93 | confirmado |
+| SEQ-14 | Secuencia mixta de 20 mensajes. | `pruebas/ejemplos.jsonl` es una sola secuencia de la mañana. Los mensajes repetidos el 2026-10-10 coincidieron. | sección 6; `ejemplos.jsonl` | confirmado en los mensajes repetidos |
+| SEQ-15 | `X-Req` frente al reset. | El reset no reinicia `X-Req`. `/health` y `/__reset` no lo devuelven. | 4, 6, 7 | confirmado en el original |
+
+### Qué se implementó
+
+El reemplazo guarda cuentas, operaciones y los dos contadores en memoria, separados por el Bearer aceptado. `POST /__reset` sustituye solo ese estado por el estado inicial. Una operación rechazada por cuenta inexistente, límite o saldo no mueve saldos ni consume el id en los casos ya observados. Anular una transferencia o un depósito observados revierte ese importe y una segunda anulación no lo vuelve a aplicar.
+
+Eso está cubierto por `tests/sequences.test.ts`, `tests/commands.test.ts`, `tests/store.test.ts` y la regresión de `tools/sequences`.
+
+### Qué sigue siendo hipótesis o desconocido
+
+| Tema | Estado |
+| --- | --- |
+| Aislamiento entre dos tokens válidos del original | No verificado. Solo hay un token de participante y no se usaron credenciales ajenas. El enunciado lo exige. El reemplazo aísla por Bearer con tokens de prueba locales. |
+| `/__reset` de un token sobre el estado de otro en el original | No verificado por la misma razón. En el reemplazo, el reset de un token no borra el otro. |
+| Reinicio del proceso del original | Desconocido. En el reemplazo, un proceso nuevo no conserva el `Map` en memoria. Eso no es lo mismo que `POST /__reset`: el reset es una petición al proceso vivo y solo afecta al token autenticado. |
+| Importe de transferencia igual al saldo | Desconocido. No hay un mensaje con control ya observado para ese importe. No se afirma un umbral a partir de 100000 aceptado y 120000 rechazado. El reemplazo trata `importe > saldo` como insuficiente y `importe > 100000` como límite; lo segundo es un supuesto. |
+| Transferencia con origen o destino inexistente | Desconocido. El reemplazo responde `E401` antes de mover saldos. No es una observación. |
+| Anular un depósito después de una transferencia que ya usó parte de ese saldo | Desconocido. No se midió si el original lo rechaza o deja un saldo negativo. El reemplazo resta el importe anulado; eso es un supuesto para ese caso. |
+| Saldo exacto de la cuenta destino después de anular `OP-0003` | No consultado. Sí se consultó el origen, que quedó en 210000. `ejemplos.jsonl` n=16 es compatible con que el destino no conservara los 100000, pero no demuestra el saldo exacto. |
+| `E507` y el contador de operaciones | Desconocido. Sí se sabe que no cambió los saldos en 0. |
+| `POST /__reset` con cuerpo mientras hay cuentas | Desconocido. Con cuerpo y sin cuentas respondió `{"ok":true}`. |
+| `X-Req` en el reemplazo | El original lo incrementa en `POST /msg` y el reset no lo pone a cero. El reemplazo todavía no emite ese header. No se ha convertido en un hecho del reemplazo. |
+| `AC-0003` y ids posteriores no vistos | El reemplazo continúa la numeración de cuatro dígitos. Solo están observados `AC-0001`, `AC-0002`, `OP-0001` a `OP-0003` en experimentos, y `OP-0004` en los ejemplos de la mañana. |
+
