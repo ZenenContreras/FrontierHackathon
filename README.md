@@ -159,9 +159,10 @@ npm start
 En desarrollo, `npm run dev` recompila al guardar. El puerto sale de `PORT` y, si no existe, es
 `3000`. El proceso escucha en `0.0.0.0`.
 
-Para distinguir un Bearer válido hace falta `PARTICIPANT_TOKEN` en el entorno. Sin esa variable,
-`/health`, `/__reset` y `/msg` responden 401. El laboratorio también la usa y no forma parte del
-proceso desplegable.
+Para distinguir un Bearer válido hace falta `PARTICIPANT_TOKEN` en el entorno. `src/server.ts`
+carga `.env` antes de `loadConfig()` y no pisa variables que ya estén definidas. Sin esa variable,
+`config.tokens` queda vacío y `/health`, `/__reset` y `/msg` responden 401. El laboratorio también
+la usa y no forma parte del proceso desplegable.
 
 ## Laboratorio
 

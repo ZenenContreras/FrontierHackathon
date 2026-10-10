@@ -152,7 +152,7 @@ El diagrama de arquitectura está en `docs/diagramadearquitectura.md`. `docs/des
 - `pruebas/ejemplos.jsonl`: ejemplos proporcionados por la organización.
 - `experimentos.jsonl`: registro de las peticiones realizadas al original y sus resultados. Sigue el esquema oficial y no debe recibir resultados simulados.
 - `tools/`: laboratorio de experimentación. Es el único lugar que puede llamar al original.
-- `src/`: implementación del reemplazo. No importa `tools/` ni lee `PARTICIPANT_TOKEN`.
+- `src/`: implementación del reemplazo. No importa `tools/`. `src/server.ts` carga `.env` antes de `loadConfig()` para aceptar el Bearer de `PARTICIPANT_TOKEN`; no llama al original.
 - `tests/`: pruebas automatizadas.
 - `README.md`: introducción, configuración y comandos del proyecto.
 - `.agents/skills/backend-node-express-clean-architecture/SKILL.md`: recurso de referencia para patrones de arquitectura backend. Debe utilizarse cuando sea pertinente, sin anteponer sus recomendaciones a los requisitos del reto.
