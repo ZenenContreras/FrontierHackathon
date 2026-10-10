@@ -122,7 +122,7 @@ La estructura inicial del repositorio es:
 └── README.md
 ```
 
-Esta estructura representa el estado inicial conocido. Los agentes deben inspeccionar los archivos reales antes de asumir que contienen una implementación completa.
+Esta estructura representa el estado inicial conocido. Los agentes deben inspeccionar los archivos reales antes de asumir que contienen una implementación completa, y en caso de modificar algo documentarlo en este archivo en el text de arriba. 
 
 ### Responsabilidades de los archivos existentes
 
